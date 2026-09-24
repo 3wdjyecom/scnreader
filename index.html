@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galgame 文本提取器 · 分页预览</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    background: #f5f6f8;
+    color: #1e1e1e;
+    margin: 0;
+    padding: 24px 16px 60px;
+    display: flex;
+    justify-content: center;
+  }
+  .app {
+    width: 100%;
+    max-width: 900px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+    padding: 28px 30px;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  .sub {
+    color: #666;
+    font-size: 14px;
+    margin: 0 0 22px;
+  }
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 14px 16px;
+    background: #f8f9fb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+  }
+  .toolbar label { font-size: 14px; color: #333; }
+  select, button {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #d0d5dd;
+    background: #fff;
+    color: #1e1e1e;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  select:focus, button:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 1px;
+  }
+  button.primary {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+    font-weight: 500;
+  }
+  button.primary:hover { background: #2563eb; }
+  button.secondary:hover { background: #f1f5f9; }
+  button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+  #status {
+    font-size: 14px;
+    color: #475569;
+    margin-bottom: 16px;
+    min-height: 20px;
+  }
+  .result-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    background: #fafafa;
+  }
+  .result-item h3 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    word-break: break-all;
+  }
+  .result-item h3.failed {
+    color: #dc2626;
+  }
+  .result-item p {
+    margin: 0 0 10px;
+    font-size: 13px;
+    color: #64748b;
+  }
+  .result-item .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .result-item button {
+    font-size: 13px;
+    padding: 6px 14px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+  }
+  .result-item button:hover { background: #f1f5f9; }
+  .result-item button.preview-btn {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+  .result-item button.preview-btn:hover { background: #dbeafe; }
+
+  /* ===== 预览区 ===== */
+  .preview-section {
+    margin-top: 0;
+    margin-bottom: 28px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    position: relative;
+  }
+  .preview-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #f1f5f9;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+  .preview-header .preview-title {
+    font-weight: 600;
+    color: #1e293b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 1;
+    min-width: 140px;
+  }
+  .preview-header .preview-count {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+  }
+  .preview-header button {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .preview-body {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 18px 20px;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: "Cascadia Code", Consolas, "JetBrains Mono", "Courier New", monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #1e293b;
+    background: #fcfcfd;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+  .preview-body:disabled {
+    color: #94a3b8;
+    background: #fcfcfd;
+  }
+
+  /* ===== 分页控制条 ===== */
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-top: 1px solid #e5e7eb;
+  }
+  .pager button {
+    font-size: 16px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    color: #1e293b;
+    cursor: pointer;
+    min-width: 44px;
+    transition: all .15s;
+  }
+  .pager button:hover:not(:disabled) { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+  .pager .page-indicator {
+    font-size: 14px;
+    color: #334155;
+    min-width: 90px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .pager .pager-spacer { flex: 1; }
+  .pager .settings-btn {
+    font-size: 13px;
+    padding: 6px 12px;
+    min-width: auto;
+    color: #334155;
+  }
+  .pager .settings-btn:hover:not(:disabled) {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+  }
+
+  .error { color: #dc2626; }
+
+  /* ===== 全屏下的左右翻页热区（默认不显示） ===== */
+  .page-zone {
+    display: none;
+  }
+
+  /* ===== 全屏模式 ===== */
+  .preview-section:fullscreen,
+  .preview-section:-webkit-full-screen {
+    position: relative;
+    border-radius: 0;
+    border: none;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    width: 100%;
+    height: 100%;
+  }
+
+  .preview-section:fullscreen .preview-header,
+  .preview-section:-webkit-full-screen .preview-header {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    background: rgba(241,245,249,.92);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(203,213,225,.7);
+    z-index: 8;
+    flex-shrink: 0;
+  }
+
+  .preview-section:fullscreen .preview-body,
+  .preview-section:-webkit-full-screen .preview-body {
+    flex: 1;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding-top: 64px;
+    padding-bottom: 96px;
+    background: #fff;
+  }
+
+  /* 左右翻页热区 */
+  .preview-section:fullscreen .page-zone,
+  .preview-section:-webkit-full-screen .page-zone {
+    display: flex;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 12%;
+    min-width: 70px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+    user-select: none;
+    opacity: 0;
+    transition: opacity .18s, background .18s;
+    color: #1e293b;
+    font-size: 32px;
+    font-weight: 300;
+    background: transparent;
+  }
+  .preview-section:fullscreen .page-zone.left,
+  .preview-section:-webkit-full-screen .page-zone.left {
+    left: 0;
+  }
+  .preview-section:fullscreen .page-zone.right,
+  .preview-section:-webkit-full-screen .page-zone.right {
+    right: 0;
+  }
+  .preview-section:fullscreen .page-zone:hover,
+  .preview-section:-webkit-full-screen .page-zone:hover {
+    opacity: 1;
+    background: linear-gradient(to right, rgba(59,130,246,.12), transparent);
+  }
+  .preview-section:fullscreen .page-zone.right:hover,
+  .preview-section:-webkit-full-screen .page-zone.right:hover {
+    background: linear-gradient(to left, rgba(59,130,246,.12), transparent);
+  }
+  .preview-section:fullscreen .page-zone.disabled,
+  .preview-section:-webkit-full-screen .page-zone.disabled {
+    cursor: default;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* 全屏下的翻页条：悬浮居中 + 自动隐藏 */
+  .preview-section:fullscreen .pager,
+  .preview-section:-webkit-full-screen .pager {
+    position: absolute;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,.94);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(203,213,225,.9);
+    border-radius: 999px;
+    box-shadow: 0 6px 24px rgba(0,0,0,.12);
+    padding: 8px 14px;
+    gap: 10px;
+    z-index: 10;
+    width: auto;
+    max-width: 90%;
+    justify-content: center;
+    transition: opacity .35s ease, transform .35s ease;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .preview-section:fullscreen .pager.hidden,
+  .preview-section:-webkit-full-screen .pager.hidden {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+    pointer-events: none;
+  }
+  .preview-section:fullscreen .pager .pager-spacer,
+  .preview-section:-webkit-full-screen .pager .pager-spacer {
+    display: none;
+  }
+  .preview-section:fullscreen .pager .settings-btn,
+  .preview-section:-webkit-full-screen .pager .settings-btn {
+    display: none;
+  }
+  .preview-section:fullscreen .pager button,
+  .preview-section:-webkit-full-screen .pager button {
+    font-size: 18px;
+    padding: 8px 18px;
+    min-width: 52px;
+    border-radius: 999px;
+  }
+  .preview-section:fullscreen .pager .page-indicator,
+  .preview-section:-webkit-full-screen .pager .page-indicator {
+    font-size: 15px;
+    min-width: 110px;
+  }
+
+  /* ===== 设置弹窗 ===== */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .18s ease, visibility .18s ease;
+  }
+  .modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+  }
+  .modal {
+    width: 100%;
+    max-width: 440px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.18);
+    transform: translateY(-8px);
+    transition: transform .18s ease;
+    overflow: hidden;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+  }
+  .modal-close {
+    border: none;
+    background: transparent;
+    font-size: 20px;
+    line-height: 1;
+    color: #64748b;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+  }
+  .modal-close:hover { background: #f1f5f9; color: #1e293b; }
+  .modal-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .setting-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+  }
+  .setting-group .hint {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .setting-group select {
+    width: 100%;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .slider-row input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: #e2e8f0;
+    outline: none;
+    cursor: pointer;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3b82f6;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    cursor: pointer;
+    transition: transform .12s;
+  }
+  .slider-row input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.12);
+  }
+  .slider-row input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #3b82f6;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    cursor: pointer;
+  }
+  .slider-row input[type="number"] {
+    width: 68px;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-family: inherit;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: #1e293b;
+    background: #fff;
+  }
+  .slider-row input[type="number"]:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 1px;
+    border-color: #3b82f6;
+  }
+  .slider-row .unit {
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid #e5e7eb;
+    background: #f8fafc;
+  }
+
+  @media (max-width: 600px) {
+    .app { padding: 20px 16px; }
+    .toolbar { flex-direction: column; align-items: stretch; }
+    select, button { width: 100%; }
+    .preview-header button { width: auto; }
+    .pager { flex-wrap: wrap; }
+    .pager button { min-width: 40px; }
+    .preview-body { font-size: 13px; }
+
+    .preview-section:fullscreen .page-zone,
+    .preview-section:-webkit-full-screen .page-zone {
+      width: 20%;
+      min-width: 80px;
+      font-size: 28px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Galgame 文本提取器</h1>
+  <p class="sub">从剧本 JSON 中提取指定语言的对话文本。首次上传时会一次性提取全部四种语言并缓存，切换语言无需重新解析。</p>
+
+  <div class="toolbar">
+    <label for="language">提取语言：</label>
+    <select id="language">
+      <option value="简体中文" selected>简体中文</option>
+      <option value="日文">日文</option>
+      <option value="繁体中文">繁体中文</option>
+      <option value="英文">英文</option>
+    </select>
+    <button id="pickFilesBtn" class="primary">选择 JSON 文件</button>
+    <button id="pickFolderBtn" class="secondary">选择文件夹</button>
+    <input type="file" id="fileInput" accept=".json" multiple hidden>
+    <input type="file" id="folderInput" webkitdirectory hidden>
+  </div>
+
+  <div id="status"></div>
+
+  <!-- ===== 预览区（分页） ===== -->
+  <div class="preview-section" id="previewSection">
+    <div class="preview-header">
+      <span class="preview-title" id="previewTitle">预览区</span>
+      <span class="preview-count" id="previewCount"></span>
+      <button id="downloadConcatBtn" class="primary" disabled>下载拼接剧本</button>
+      <button id="copyPreviewBtn" class="secondary" disabled>复制全文</button>
+      <button id="clearPreviewBtn" class="secondary" disabled>清空</button>
+      <button id="fullscreenBtn" class="secondary" disabled>全屏</button>
+    </div>
+
+    <!-- 全屏下的左右翻页热区 -->
+    <div class="page-zone left" id="pageZoneLeft" title="上一页"><span>◀</span></div>
+    <div class="page-zone right" id="pageZoneRight" title="下一页"><span>▶</span></div>
+
+    <textarea class="preview-body" id="previewBody" readonly rows="20" wrap="soft" placeholder="点击结果卡片中的「拼接预览」按钮，即可在此查看按文件名排序拼接后的文本。"></textarea>
+
+    <!-- 分页控制条 -->
+    <div class="pager" id="pager" style="display:none;">
+      <button id="prevPageBtn" title="上一页">◀</button>
+      <span class="page-indicator" id="pageIndicator">1 / 1</span>
+      <button id="nextPageBtn" title="下一页">▶</button>
+      <span class="pager-spacer"></span>
+      <button id="openSettingsBtn" class="settings-btn" title="设置">⚙ 设置</button>
+    </div>
+  </div>
+
+  <!-- ===== 结果区 ===== -->
+  <div id="results"></div>
+</div>
+
+<!-- ===== 设置弹窗 ===== -->
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+    <div class="modal-header">
+      <span id="settingsTitle">设置</span>
+      <button class="modal-close" id="closeSettingsBtn" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-group">
+        <label for="pageSizeSelect">每页行数</label>
+        <select id="pageSizeSelect">
+          <option value="10">10 行</option>
+          <option value="15">15 行</option>
+          <option value="20" selected>20 行</option>
+          <option value="30">30 行</option>
+          <option value="40">40 行</option>
+          <option value="50">50 行</option>
+        </select>
+        <div class="hint">每页显示的视觉行数（会自动处理长句折行）。</div>
+      </div>
+
+      <div class="setting-group">
+        <label for="fontSizeSlider">字体大小</label>
+        <div class="slider-row">
+          <input type="range" id="fontSizeSlider" min="10" max="24" step="0.5" value="13.5">
+          <input type="number" id="fontSizeNumber" min="10" max="24" step="0.5" value="13.5">
+          <span class="unit">px</span>
+        </div>
+        <div class="hint">调整预览区文字大小，修改后立即生效。</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="secondary" id="closeSettingsFooterBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- 工具函数 ----------
+function naturalCompare(a, b) {
+  const strA = typeof a === 'string' ? a : a.name;
+  const strB = typeof b === 'string' ? b : b.name;
+  let i = 0, j = 0;
+  while (i < strA.length && j < strB.length) {
+    if (/\d/.test(strA[i]) && /\d/.test(strB[j])) {
+      let startA = i, startB = j;
+      while (i < strA.length && /\d/.test(strA[i])) i++;
+      while (j < strB.length && /\d/.test(strB[j])) j++;
+      const numA = parseInt(strA.substring(startA, i), 10);
+      const numB = parseInt(strB.substring(startB, j), 10);
+      if (numA !== numB) return numA - numB;
+    } else {
+      const cmp = strA[i].toLowerCase().localeCompare(strB[j].toLowerCase());
+      if (cmp !== 0) return cmp;
+      i++; j++;
+    }
+  }
+  return (strA.length - i) - (strB.length - j);
+}
+
+function readFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => resolve(e.target.result);
+    reader.onerror = e => reject(e.target.error);
+    reader.readAsText(file, 'UTF-8');
+  });
+}
+
+const ALL_LANGUAGES = ['日文', '英文', '简体中文', '繁体中文'];
+
+// ---------- 核心提取逻辑 ----------
+function extractAllLanguages(root) {
+  const textsArrays = [];
+
+  if (Array.isArray(root.scenes)) {
+    for (const scene of root.scenes) {
+      if (Array.isArray(scene.texts)) {
+        textsArrays.push(scene.texts);
+      }
+    }
+  }
+  if (Array.isArray(root.texts)) {
+    textsArrays.push(root.texts);
+  }
+
+  if (textsArrays.length === 0) {
+    return { results: null, error: '未找到 texts 数组' };
+  }
+
+  const langTexts = {};
+  for (const lang of ALL_LANGUAGES) langTexts[lang] = [];
+
+  for (const textsElement of textsArrays) {
+    for (const textItem of textsElement) {
+      if (!Array.isArray(textItem) || textItem.length < 2) continue;
+
+      let dialogues = null;
+      for (let i = 0; i < textItem.length; i++) {
+        const elem = textItem[i];
+        if (Array.isArray(elem) && elem.length > 0) {
+          if (Array.isArray(elem[0])) {
+            dialogues = elem;
+            break;
+          }
+        }
+      }
+      if (!dialogues) continue;
+
+      let speaker = '';
+      if (typeof textItem[0] === 'string') {
+        speaker = textItem[0];
+      }
+
+      const dialogueArray = dialogues;
+
+      const langIndexMap = {};
+      if (dialogueArray.length === 4) {
+        langIndexMap['日文'] = 0;
+        langIndexMap['英文'] = 1;
+        langIndexMap['简体中文'] = 2;
+        langIndexMap['繁体中文'] = 3;
+      } else if (dialogueArray.length === 3) {
+        langIndexMap['日文'] = 0;
+        langIndexMap['简体中文'] = 1;
+        langIndexMap['繁体中文'] = 2;
+      } else if (dialogueArray.length === 2) {
+        langIndexMap['日文'] = 0;
+        langIndexMap['简体中文'] = 1;
+      } else {
+        langIndexMap['日文'] = 0;
+      }
+
+      for (const lang of ALL_LANGUAGES) {
+        const idx = langIndexMap[lang];
+        if (idx === undefined || idx >= dialogueArray.length) continue;
+
+        const targetDialogue = dialogueArray[idx];
+        if (!Array.isArray(targetDialogue) || targetDialogue.length < 2) continue;
+
+        const dialogueSpeaker = typeof targetDialogue[0] === 'string' ? targetDialogue[0] : '';
+        let finalSpeaker = speaker;
+        if (dialogueSpeaker.trim() !== '') {
+          finalSpeaker = dialogueSpeaker;
+        }
+
+        const text = typeof targetDialogue[1] === 'string' ? targetDialogue[1] : '';
+        if (text.trim() !== '') {
+          if (finalSpeaker.trim() !== '') {
+            langTexts[lang].push(`${finalSpeaker}: ${text}`);
+          } else {
+            langTexts[lang].push(text);
+          }
+        }
+      }
+    }
+  }
+
+  return { results: langTexts, error: null };
+}
+
+// ---------- 界面元素 ----------
+const languageSelect = document.getElementById('language');
+const pickFilesBtn = document.getElementById('pickFilesBtn');
+const pickFolderBtn = document.getElementById('pickFolderBtn');
+const fileInput = document.getElementById('fileInput');
+const folderInput = document.getElementById('folderInput');
+const statusDiv = document.getElementById('status');
+const resultsDiv = document.getElementById('results');
+
+const previewSection = document.getElementById('previewSection');
+const previewTitle = document.getElementById('previewTitle');
+const previewCount = document.getElementById('previewCount');
+const previewBody = document.getElementById('previewBody');
+const copyPreviewBtn = document.getElementById('copyPreviewBtn');
+const clearPreviewBtn = document.getElementById('clearPreviewBtn');
+const downloadConcatBtn = document.getElementById('downloadConcatBtn');
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+const pager = document.getElementById('pager');
+const prevPageBtn = document.getElementById('prevPageBtn');
+const nextPageBtn = document.getElementById('nextPageBtn');
+const pageIndicator = document.getElementById('pageIndicator');
+const openSettingsBtn = document.getElementById('openSettingsBtn');
+
+const pageZoneLeft = document.getElementById('pageZoneLeft');
+const pageZoneRight = document.getElementById('pageZoneRight');
+
+const settingsOverlay = document.getElementById('settingsOverlay');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+const closeSettingsFooterBtn = document.getElementById('closeSettingsFooterBtn');
+const pageSizeSelect = document.getElementById('pageSizeSelect');
+const fontSizeSlider = document.getElementById('fontSizeSlider');
+const fontSizeNumber = document.getElementById('fontSizeNumber');
+
+let cachedFileResults = [];
+let extractionResults = [];
+let lastFiles = [];
+
+let currentPreviewText = '';
+let previewLines = [];
+let pageStartIndexes = [];
+let currentPage = 1;
+let pageSize = 20;
+let fontSize = 13.5;
+
+// ---------- 分页：按视觉行数估算 ----------
+const _measureCanvas = document.createElement('canvas');
+const _measureCtx = _measureCanvas.getContext('2d');
+
+function measureTextWidth(text, font) {
+  _measureCtx.font = font;
+  return _measureCtx.measureText(text).width;
+}
+
+function visualLinesOfLine(line, maxWidth, font) {
+  if (!line) return 1;
+  const totalWidth = measureTextWidth(line, font);
+  return Math.max(1, Math.ceil(totalWidth / maxWidth));
+}
+
+function computeLogicalLinesPerPage() {
+  const style = getComputedStyle(previewBody);
+  const lineHeight = parseFloat(style.lineHeight) || (fontSize * 1.7);
+  const paddingTop = parseFloat(style.paddingTop) || 0;
+  const paddingBottom = parseFloat(style.paddingBottom) || 0;
+
+  const innerHeight = previewBody.clientHeight - paddingTop - paddingBottom;
+
+  let visualRows = Math.floor(innerHeight / lineHeight);
+  if (!visualRows || visualRows < 1) {
+    visualRows = parseInt(previewBody.getAttribute('rows'), 10) || 20;
+  }
+
+  const paddingLeft = parseFloat(style.paddingLeft) || 0;
+  const paddingRight = parseFloat(style.paddingRight) || 0;
+  const contentWidth = Math.max(1, previewBody.clientWidth - paddingLeft - paddingRight);
+
+  const font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+
+  let visualLines = 0;
+  let logicLines = 0;
+  for (let i = 0; i < previewLines.length; i++) {
+    const v = visualLinesOfLine(previewLines[i], contentWidth, font);
+    if (visualLines + v > visualRows) break;
+    visualLines += v;
+    logicLines++;
+  }
+  return Math.max(1, logicLines);
+}
+
+function repaginate() {
+  pageStartIndexes = [];
+  if (previewLines.length === 0) {
+    pageStartIndexes.push(0);
+    return;
+  }
+  const linesPerPage = computeLogicalLinesPerPage();
+  for (let i = 0; i < previewLines.length; i += linesPerPage) {
+    pageStartIndexes.push(i);
+  }
+}
+
+function renderPage() {
+  if (previewLines.length === 0) {
+    previewBody.value = '';
+    previewBody.disabled = true;
+    pageIndicator.textContent = '0 / 0';
+    prevPageBtn.disabled = true;
+    nextPageBtn.disabled = true;
+    pageZoneLeft.classList.add('disabled');
+    pageZoneRight.classList.add('disabled');
+    return;
+  }
+
+  previewBody.disabled = false;
+
+  const totalPages = pageStartIndexes.length;
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const start = pageStartIndexes[currentPage - 1];
+  const nextStart = currentPage < totalPages ? pageStartIndexes[currentPage] : previewLines.length;
+  const pageLines = previewLines.slice(start, nextStart);
+
+  previewBody.value = pageLines.join('\n');
+  previewBody.scrollTop = 0;
+
+  pageIndicator.textContent = `${currentPage} / ${totalPages}`;
+  prevPageBtn.disabled = currentPage <= 1;
+  nextPageBtn.disabled = currentPage >= totalPages;
+
+  pageZoneLeft.classList.toggle('disabled', currentPage <= 1);
+  pageZoneRight.classList.toggle('disabled', currentPage >= totalPages);
+
+  const totalChars = currentPreviewText.length;
+  previewCount.textContent = `共 ${previewLines.length} 行 · ${totalChars} 字符（第 ${start + 1}-${nextStart} 行）`;
+}
+
+function setPreviewContent(title, textContent) {
+  currentPreviewText = textContent || '';
+  previewTitle.textContent = title;
+
+  previewLines = currentPreviewText === '' ? [] : currentPreviewText.split('\n');
+  currentPage = 1;
+
+  repaginate();
+
+  const hasContent = previewLines.length > 0;
+  pager.style.display = hasContent ? 'flex' : 'none';
+  copyPreviewBtn.disabled = !hasContent;
+  clearPreviewBtn.disabled = !hasContent;
+  fullscreenBtn.disabled = !hasContent;
+
+  renderPage();
+}
+
+function showPreview(fileName, textContent) {
+  setPreviewContent(fileName, textContent);
+  downloadConcatBtn.disabled = true;
+}
+
+function buildConcatText() {
+  if (!extractionResults || extractionResults.length === 0) return null;
+
+  const sortedResults = [...extractionResults].sort((a, b) => naturalCompare(a.fileName, b.fileName));
+  const successfulResults = sortedResults.filter(r => !r.error && Array.isArray(r.texts) && r.texts.length > 0);
+
+  if (successfulResults.length === 0) return null;
+
+  const parts = [];
+  for (const res of successfulResults) {
+    const textBlock = res.texts.join('\n');
+    if (textBlock.trim() !== '') {
+      if (parts.length > 0) parts.push('');
+      parts.push(textBlock);
+    }
+  }
+  if (parts.length === 0) return null;
+  return { text: parts.join('\n'), count: successfulResults.length };
+}
+
+function showConcatPreview() {
+  if (!extractionResults || extractionResults.length === 0) {
+    if (lastFiles.length === 0) {
+      clearPreview();
+      return;
+    }
+    setPreviewContent('拼接预览（所有文件）', '请先点击“选择 JSON 文件”或“选择文件夹”处理文件后再预览。');
+    downloadConcatBtn.disabled = true;
+    return;
+  }
+
+  const result = buildConcatText();
+
+  if (!result) {
+    setPreviewContent('拼接预览（所有文件）', '当前语言下没有成功提取的文本，无法拼接。');
+    downloadConcatBtn.disabled = true;
+    return;
+  }
+
+  setPreviewContent(`拼接预览（${result.count} 个成功文件，已忽略失败）`, result.text);
+  downloadConcatBtn.disabled = false;
+}
+
+function clearPreview() {
+  currentPreviewText = '';
+  previewLines = [];
+  pageStartIndexes = [];
+  currentPage = 1;
+  previewTitle.textContent = '预览区';
+  previewCount.textContent = '';
+  previewBody.value = '';
+  previewBody.disabled = true;
+  pager.style.display = 'none';
+  pager.classList.remove('hidden');
+  clearTimeout(pagerHideTimer);
+  copyPreviewBtn.disabled = true;
+  clearPreviewBtn.disabled = true;
+  downloadConcatBtn.disabled = true;
+  fullscreenBtn.disabled = true;
+  pageZoneLeft.classList.add('disabled');
+  pageZoneRight.classList.add('disabled');
+}
+
+// ---------- 分页事件 ----------
+function goPrev() {
+  if (currentPage > 1) {
+    currentPage--;
+    renderPage();
+    showPagerTemporarily();
+  }
+}
+function goNext() {
+  if (currentPage < pageStartIndexes.length) {
+    currentPage++;
+    renderPage();
+    showPagerTemporarily();
+  }
+}
+
+prevPageBtn.addEventListener('click', goPrev);
+nextPageBtn.addEventListener('click', goNext);
+pageZoneLeft.addEventListener('click', goPrev);
+pageZoneRight.addEventListener('click', goNext);
+
+document.addEventListener('keydown', (e) => {
+  if (pager.style.display === 'none') return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  if (e.key === 'ArrowLeft') {
+    if (!prevPageBtn.disabled) { e.preventDefault(); goPrev(); }
+  } else if (e.key === 'ArrowRight') {
+    if (!nextPageBtn.disabled) { e.preventDefault(); goNext(); }
+  }
+});
+
+let resizeTimer = null;
+function handleResize() {
+  if (previewLines.length === 0) return;
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const currentStart = pageStartIndexes[currentPage - 1] || 0;
+    repaginate();
+    let targetPage = 1;
+    for (let i = 0; i < pageStartIndexes.length; i++) {
+      if (pageStartIndexes[i] <= currentStart) targetPage = i + 1;
+      else break;
+    }
+    currentPage = targetPage;
+    renderPage();
+  }, 150);
+}
+window.addEventListener('resize', handleResize);
+
+// ---------- 全屏 ----------
+function isFullscreen() {
+  return document.fullscreenElement === previewSection ||
+         document.webkitFullscreenElement === previewSection;
+}
+
+function enterFullscreen() {
+  if (previewSection.requestFullscreen) {
+    previewSection.requestFullscreen();
+  } else if (previewSection.webkitRequestFullscreen) {
+    previewSection.webkitRequestFullscreen();
+  }
+}
+
+function exitFullscreen() {
+  if (document.exitFullscreen) {
+    document.exitFullscreen();
+  } else if (document.webkitExitFullscreen) {
+    document.webkitExitFullscreen();
+  }
+}
+
+fullscreenBtn.addEventListener('click', () => {
+  if (isFullscreen()) exitFullscreen();
+  else enterFullscreen();
+});
+
+function onFullscreenChange() {
+  const fs = isFullscreen();
+  fullscreenBtn.textContent = fs ? '退出全屏' : '全屏';
+
+  if (fs) {
+    // 进入全屏：显示翻页条并开始 4 秒倒计时
+    showPagerTemporarily();
+  } else {
+    // 退出全屏：取消隐藏，恢复常显
+    cancelPagerHide();
+  }
+
+  setTimeout(() => {
+    if (previewLines.length > 0) {
+      const currentStart = pageStartIndexes[currentPage - 1] || 0;
+      repaginate();
+      let targetPage = 1;
+      for (let i = 0; i < pageStartIndexes.length; i++) {
+        if (pageStartIndexes[i] <= currentStart) targetPage = i + 1;
+        else break;
+      }
+      currentPage = targetPage;
+      renderPage();
+    }
+  }, 80);
+}
+document.addEventListener('fullscreenchange', onFullscreenChange);
+document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
+// ---------- 全屏翻页条自动隐藏 ----------
+const PAGER_HIDE_DELAY = 4000;
+let pagerHideTimer = null;
+
+function showPagerTemporarily() {
+  if (!isFullscreen()) {
+    pager.classList.remove('hidden');
+    return;
+  }
+  pager.classList.remove('hidden');
+  clearTimeout(pagerHideTimer);
+  pagerHideTimer = setTimeout(() => {
+    if (isFullscreen()) {
+      pager.classList.add('hidden');
+    }
+  }, PAGER_HIDE_DELAY);
+}
+
+function cancelPagerHide() {
+  clearTimeout(pagerHideTimer);
+  pager.classList.remove('hidden');
+}
+
+// 鼠标移入翻页条：保持显示
+pager.addEventListener('mouseenter', cancelPagerHide);
+// 鼠标离开翻页条：重新计时
+pager.addEventListener('mouseleave', () => {
+  if (isFullscreen()) showPagerTemporarily();
+});
+
+// 鼠标移入左右热区：唤醒翻页条
+pageZoneLeft.addEventListener('mouseenter', () => showPagerTemporarily());
+pageZoneRight.addEventListener('mouseenter', () => showPagerTemporarily());
+
+// 全屏下移动鼠标：唤醒翻页条（节流）
+let moveThrottle = null;
+previewSection.addEventListener('mousemove', () => {
+  if (!isFullscreen()) return;
+  if (moveThrottle) return;
+  moveThrottle = setTimeout(() => { moveThrottle = null; }, 300);
+  showPagerTemporarily();
+});
+
+// ---------- 应用字体大小 ----------
+function applyFontSize(size) {
+  const clamped = Math.min(24, Math.max(10, size));
+  fontSize = clamped;
+  previewBody.style.fontSize = clamped + 'px';
+
+  fontSizeSlider.value = String(clamped);
+  fontSizeNumber.value = String(clamped);
+
+  if (previewLines.length > 0) {
+    const currentStart = pageStartIndexes[currentPage - 1] || 0;
+    repaginate();
+    let targetPage = 1;
+    for (let i = 0; i < pageStartIndexes.length; i++) {
+      if (pageStartIndexes[i] <= currentStart) targetPage = i + 1;
+      else break;
+    }
+    currentPage = targetPage;
+    renderPage();
+  }
+}
+
+// ---------- 设置弹窗 ----------
+function openSettings() {
+  pageSizeSelect.value = String(previewBody.getAttribute('rows') || 20);
+  fontSizeSlider.value = String(fontSize);
+  fontSizeNumber.value = String(fontSize);
+  settingsOverlay.classList.add('open');
+}
+function closeSettings() {
+  settingsOverlay.classList.remove('open');
+}
+
+openSettingsBtn.addEventListener('click', openSettings);
+closeSettingsBtn.addEventListener('click', closeSettings);
+closeSettingsFooterBtn.addEventListener('click', closeSettings);
+
+settingsOverlay.addEventListener('click', (e) => {
+  if (e.target === settingsOverlay) closeSettings();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && settingsOverlay.classList.contains('open')) {
+    closeSettings();
+  }
+});
+
+pageSizeSelect.addEventListener('change', () => {
+  const rows = parseInt(pageSizeSelect.value, 10);
+  previewBody.setAttribute('rows', rows);
+  pageSize = rows;
+  if (previewLines.length > 0) {
+    const currentStart = pageStartIndexes[currentPage - 1] || 0;
+    repaginate();
+    let targetPage = 1;
+    for (let i = 0; i < pageStartIndexes.length; i++) {
+      if (pageStartIndexes[i] <= currentStart) targetPage = i + 1;
+      else break;
+    }
+    currentPage = targetPage;
+    renderPage();
+  }
+});
+
+fontSizeSlider.addEventListener('input', () => {
+  const size = parseFloat(fontSizeSlider.value);
+  if (!isNaN(size)) applyFontSize(size);
+});
+
+fontSizeNumber.addEventListener('input', () => {
+  const size = parseFloat(fontSizeNumber.value);
+  if (!isNaN(size)) applyFontSize(size);
+});
+
+fontSizeNumber.addEventListener('blur', () => {
+  let size = parseFloat(fontSizeNumber.value);
+  if (isNaN(size)) size = 13.5;
+  applyFontSize(size);
+});
+
+fontSizeNumber.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    fontSizeNumber.blur();
+  }
+});
+
+// ---------- 下载拼接剧本 ----------
+downloadConcatBtn.addEventListener('click', () => {
+  if (!currentPreviewText) return;
+  const blob = new Blob([currentPreviewText], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const lang = languageSelect.value;
+  a.download = `拼接剧本_${lang}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  const old = downloadConcatBtn.textContent;
+  downloadConcatBtn.textContent = '已下载 ✓';
+  setTimeout(() => { downloadConcatBtn.textContent = old; }, 1200);
+});
+
+// ---------- 复制 ----------
+copyPreviewBtn.addEventListener('click', async () => {
+  if (!currentPreviewText) return;
+  try {
+    await navigator.clipboard.writeText(currentPreviewText);
+    const old = copyPreviewBtn.textContent;
+    copyPreviewBtn.textContent = '已复制 ✓';
+    setTimeout(() => { copyPreviewBtn.textContent = old; }, 1200);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = currentPreviewText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    const old = copyPreviewBtn.textContent;
+    copyPreviewBtn.textContent = '已复制 ✓';
+    setTimeout(() => { copyPreviewBtn.textContent = old; }, 1200);
+  }
+});
+
+clearPreviewBtn.addEventListener('click', () => {
+  if (isFullscreen()) exitFullscreen();
+  clearPreview();
+});
+
+// ---------- 结果渲染 ----------
+function renderResults() {
+  resultsDiv.innerHTML = '';
+  const lang = languageSelect.value;
+
+  for (const cached of cachedFileResults) {
+    if (cached.error) {
+      addResult(cached.fileName, cached.error, null, true);
+    } else {
+      const texts = cached.languages[lang] || [];
+      const txtContent = texts.join('\n');
+      addResult(cached.fileName, `已提取 ${texts.length} 条文本（${lang}）`, txtContent, false);
+    }
+  }
+}
+
+function addResult(fileName, message, txtContent, failed) {
+  const div = document.createElement('div');
+  div.className = 'result-item';
+
+  const h3 = document.createElement('h3');
+  h3.textContent = fileName;
+  if (failed) h3.classList.add('failed');
+
+  const p = document.createElement('p');
+  p.textContent = message;
+  if (message.startsWith('解析错误') || message.startsWith('未找到') || message.startsWith('读取失败')) {
+    p.classList.add('error');
+  }
+
+  div.appendChild(h3);
+  div.appendChild(p);
+
+  if (txtContent !== null) {
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+
+    const concatPreviewBtn = document.createElement('button');
+    concatPreviewBtn.className = 'preview-btn';
+    concatPreviewBtn.textContent = '拼接预览';
+    concatPreviewBtn.title = '按文件名排序拼接所有成功提取的JSON文件并预览（忽略失败）';
+    concatPreviewBtn.onclick = () => {
+      showConcatPreview();
+      previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    actions.appendChild(concatPreviewBtn);
+
+    const singlePreviewBtn = document.createElement('button');
+    singlePreviewBtn.textContent = '单独预览';
+    singlePreviewBtn.title = '仅预览当前文件的提取文本';
+    singlePreviewBtn.onclick = () => {
+      showPreview(fileName, txtContent);
+      previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+    actions.appendChild(singlePreviewBtn);
+
+    const downloadBtn = document.createElement('button');
+    downloadBtn.textContent = '下载提取的文本';
+    downloadBtn.onclick = () => {
+      const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName.replace(/\.json$/i, `_${languageSelect.value}_texts.txt`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+    actions.appendChild(downloadBtn);
+
+    div.appendChild(actions);
+  }
+
+  resultsDiv.appendChild(div);
+}
+
+function rebuildViewForLanguage(lang) {
+  extractionResults = cachedFileResults.map(cached => {
+    if (cached.error) {
+      return { fileName: cached.fileName, texts: [], error: cached.error };
+    }
+    return {
+      fileName: cached.fileName,
+      texts: cached.languages[lang] || [],
+      error: null,
+    };
+  });
+}
+
+// ---------- 处理文件 ----------
+async function processFiles(files) {
+  const jsonFiles = files.filter(f => f.name.toLowerCase().endsWith('.json'));
+  if (jsonFiles.length === 0) {
+    statusDiv.textContent = '未找到 .json 文件';
+    return;
+  }
+
+  jsonFiles.sort(naturalCompare);
+  resultsDiv.innerHTML = '';
+  clearPreview();
+  cachedFileResults = [];
+  extractionResults = [];
+  statusDiv.textContent = `共找到 ${jsonFiles.length} 个 JSON 文件，正在解析全部语言...`;
+
+  let successCount = 0;
+  let failCount = 0;
+  const failedFiles = [];
+
+  for (const file of jsonFiles) {
+    try {
+      const content = await readFile(file);
+      const root = JSON.parse(content);
+      const { results, error } = extractAllLanguages(root);
+
+      if (error) {
+        cachedFileResults.push({ fileName: file.name, languages: null, error });
+        failCount++;
+        failedFiles.push({ fileName: file.name, error });
+      } else {
+        cachedFileResults.push({ fileName: file.name, languages: results, error: null });
+        successCount++;
+      }
+    } catch (e) {
+      const errMsg = `解析错误: ${e.message}`;
+      cachedFileResults.push({ fileName: file.name, languages: null, error: errMsg });
+      failCount++;
+      failedFiles.push({ fileName: file.name, error: errMsg });
+    }
+  }
+
+  statusDiv.textContent = `处理完成：成功 ${successCount} 个，失败 ${failCount} 个。`;
+
+  if (failedFiles.length > 0) {
+    const message = '以下文件处理失败：\n\n' + failedFiles.map(f => `· ${f.fileName}\n  ${f.error}`).join('\n\n');
+    alert(message);
+  }
+
+  const lang = languageSelect.value;
+  rebuildViewForLanguage(lang);
+  renderResults();
+
+  if (successCount > 0) {
+    showConcatPreview();
+  }
+}
+
+function handleFiles(files) {
+  lastFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.json'));
+  if (lastFiles.length === 0) {
+    statusDiv.textContent = '未找到 .json 文件';
+    resultsDiv.innerHTML = '';
+    clearPreview();
+    cachedFileResults = [];
+    extractionResults = [];
+    return;
+  }
+  processFiles(lastFiles);
+}
+
+// ---------- 事件绑定 ----------
+pickFilesBtn.addEventListener('click', () => fileInput.click());
+pickFolderBtn.addEventListener('click', () => folderInput.click());
+
+fileInput.addEventListener('change', e => {
+  if (e.target.files.length) handleFiles(e.target.files);
+  fileInput.value = '';
+});
+
+folderInput.addEventListener('change', e => {
+  if (e.target.files.length) handleFiles(e.target.files);
+  folderInput.value = '';
+});
+
+languageSelect.addEventListener('change', () => {
+  if (cachedFileResults.length === 0) return;
+  const lang = languageSelect.value;
+  rebuildViewForLanguage(lang);
+  renderResults();
+  const successCount = extractionResults.filter(r => !r.error).length;
+  if (successCount > 0) {
+    showConcatPreview();
+  } else {
+    clearPreview();
+  }
+});
+
+// 初始状态
+statusDiv.textContent = '请选择 JSON 文件或文件夹。';
+clearPreview();
+</script>
+</body>
+</html>
