@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>scn剧本阅读器</title>
+<title>scn剧本阅读器 · 滚轮翻页</title>
 <style>
   * { box-sizing: border-box; }
   body {
-    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    font-family: "Segoe UI", system-ui, sans-serif;
     background: #f5f6f8; color: #1e1e1e; margin: 0;
     padding: 24px 16px 60px; display: flex; justify-content: center;
   }
@@ -229,7 +229,7 @@
 <body>
 <div class="app">
   <h1>JSON剧本提取阅读器</h1>
-  <p class="sub">从剧本 JSON 中提取指定语言的对话文本。也可以直接上传 TXT 文件绕过解析，在预览区直接阅读（自动识别 UTF-8 / GBK / GB18030 / Big5 编码）。</p>
+  <p class="sub">从剧本 JSON 中提取指定语言的对话文本。也可以直接上传 TXT 文件绕过解析，在预览区直接阅读（自动识别 UTF-8 / GBK / GB18030 / Big5 编码）。全屏时可用鼠标滚轮切换上下页。</p>
 
   <div class="toolbar">
     <label for="language">提取语言：</label>
@@ -335,19 +335,12 @@ function naturalCompare(a, b) {
 }
 
 // ========== 编码检测 ==========
-// 返回 'UTF-8' | 'GBK' | 'Big5' | 'UTF-16LE' | 'UTF-16BE'
 function detectEncoding(bytes) {
   if (!bytes || bytes.length === 0) return 'UTF-8';
-
-  // 1. BOM 检测
   if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) return 'UTF-8';
   if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) return 'UTF-16LE';
   if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) return 'UTF-16BE';
-
-  // 2. 取前 64KB 做统计
   const sample = bytes.slice(0, Math.min(bytes.length, 65536));
-
-  // 判断是否合法 UTF-8
   function isValidUTF8(buf) {
     let i = 0;
     while (i < buf.length) {
@@ -366,25 +359,18 @@ function detectEncoding(bytes) {
     }
     return true;
   }
-
-  // 判断是否像 GBK / Big5（高字节范围 0x81-0xFE，低字节 0x40-0xFE 排除 0x7F）
   function countCJK(buf, isBig5) {
     let hits = 0, total = 0, i = 0;
     while (i < buf.length) {
       const b = buf[i];
       if (b < 0x80) { i++; continue; }
-      // 高字节
-      let lowMin = isBig5 ? 0x40 : 0x40;
-      let lowMax = isBig5 ? 0x7E : 0xFE; // Big5 低字节范围 0x40-0x7E + 0xA1-0xFE
       if (isBig5) {
-        // Big5: 低字节 0x40-0x7E 或 0xA1-0xFE
         if (i + 1 >= buf.length) break;
         const lb = buf[i + 1];
         if ((lb >= 0x40 && lb <= 0x7E) || (lb >= 0xA1 && lb <= 0xFE)) hits++;
         total++;
         i += 2;
       } else {
-        // GBK: 高字节 0x81-0xFE，低字节 0x40-0xFE (排除 0x7F)
         if (i + 1 >= buf.length) break;
         const lb = buf[i + 1];
         if (b >= 0x81 && b <= 0xFE && lb >= 0x40 && lb <= 0xFE && lb !== 0x7F) hits++;
@@ -394,36 +380,27 @@ function detectEncoding(bytes) {
     }
     return total === 0 ? 0 : hits / total;
   }
-
-  // 如果合法 UTF-8 且含高字节，优先 UTF-8
   if (isValidUTF8(sample)) {
-    // 检测是否为纯 ASCII
     let hasHigh = false;
     for (let i = 0; i < sample.length; i++) if (sample[i] >= 0x80) { hasHigh = true; break; }
-    if (!hasHigh) return 'UTF-8'; // 纯 ASCII 当 UTF-8 处理
+    if (!hasHigh) return 'UTF-8';
     return 'UTF-8';
   }
-
-  // 不合法 UTF-8，按 GBK / Big5 猜
   const gbkScore = countCJK(sample, false);
   const big5Score = countCJK(sample, true);
-
   if (big5Score > gbkScore && big5Score > 0.85) return 'Big5';
   if (gbkScore > 0.85) return 'GBK';
-  // 兜底：GBK 覆盖面更广
   return 'GBK';
 }
 
 function decodeBytes(bytes, encoding) {
-  // TextDecoder 的 label 兼容处理
   let label = encoding;
-  if (/^GBK$/i.test(label)) label = 'GBK';           // Chrome/Edge/Firefox 都支持
+  if (/^GBK$/i.test(label)) label = 'GBK';
   if (/^GB18030$/i.test(label)) label = 'GB18030';
   if (/^UTF-8$/i.test(label)) label = 'UTF-8';
   try {
     return new TextDecoder(label, { fatal: false }).decode(bytes);
   } catch (e) {
-    // 回退：GBK 兼容用 gb18030
     try {
       return new TextDecoder('gb18030', { fatal: false }).decode(bytes);
     } catch (e2) {
@@ -436,11 +413,10 @@ function readFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = e => {
-      const buffer = e.target.result; // ArrayBuffer
+      const buffer = e.target.result;
       const bytes = new Uint8Array(buffer);
       const encoding = detectEncoding(bytes);
       const text = decodeBytes(bytes, encoding);
-      // 把检测到的编码挂在返回字符串上（通过闭包/附加属性不方便，用对象返回）
       resolve({ text, encoding });
     };
     reader.onerror = e => reject(e.target.error || new Error('读取失败'));
@@ -448,7 +424,6 @@ function readFile(file) {
   });
 }
 
-// 兼容旧调用：返回纯文本
 function readFileText(file) {
   return readFile(file).then(r => r.text);
 }
@@ -666,26 +641,32 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'ArrowRight' && !nextPageBtn.disabled) { e.preventDefault(); goNext(); }
 });
 
-let resizeTimer = null;
-window.addEventListener('resize', () => {
-  if (previewLines.length === 0) return;
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    const currentStart = pageStartIndexes[currentPage - 1] || 0;
-    repaginate();
-    let targetPage = 1;
-    for (let i = 0; i < pageStartIndexes.length; i++) {
-      if (pageStartIndexes[i] <= currentStart) targetPage = i + 1; else break;
-    }
-    currentPage = targetPage; renderPage();
-  }, 150);
-});
-
-// ========== 全屏 ==========
+// ========== 全屏 + 滚轮翻页 ==========
 function isFullscreen() {
   return document.fullscreenElement === previewSection ||
          document.webkitFullscreenElement === previewSection;
 }
+
+// 全屏滚轮翻页监听器
+function handleFullscreenWheel(e) {
+  if (!isFullscreen()) return;
+  if (previewLines.length === 0) return;
+  // 只处理垂直滚轮
+  if (Math.abs(e.deltaY) < 1) return;
+  e.preventDefault();
+  e.stopPropagation();
+  if (e.deltaY > 0) {
+    // 向下滚动 → 下一页
+    if (currentPage < pageStartIndexes.length) goNext();
+  } else if (e.deltaY < 0) {
+    // 向上滚动 → 上一页
+    if (currentPage > 1) goPrev();
+  }
+}
+
+// 使用 passive: false 以便 preventDefault 阻止页面滚动
+previewSection.addEventListener('wheel', handleFullscreenWheel, { passive: false });
+
 fullscreenBtn.addEventListener('click', () => {
   if (isFullscreen()) {
     if (document.exitFullscreen) document.exitFullscreen();
@@ -1019,7 +1000,8 @@ languageSelect.addEventListener('change', () => {
   else clearPreview();
 });
 
-statusDiv.textContent = '请选择 JSON 文件或文件夹，或使用「选择 TXT 直接预览」快速阅读。';
+// 初始化
+statusDiv.textContent = '请选择 JSON 文件或文件夹，或使用「选择 TXT 直接预览」快速阅读。全屏时可用滚轮翻页。';
 clearPreview();
 </script>
 </body>
