@@ -17,7 +17,7 @@
     padding: 28px 30px;
   }
   h1 { font-size: 22px; margin: 0 0 6px; font-weight: 600; }
-  .sub { color: #666; font-size: 14px; margin: 0 0 22px; }
+  .sub { color: #666; font-size: 14px; margin: 0 0 22px; line-height: 1.6; }
   .toolbar {
     display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
     margin-bottom: 20px; padding: 14px 16px; background: #f8f9fb;
@@ -34,12 +34,221 @@
   button.primary:hover { background: #2563eb; }
   button.secondary:hover { background: #f1f5f9; }
   button:disabled { opacity: .5; cursor: not-allowed; }
-  #status { font-size: 14px; color: #475569; margin-bottom: 16px; min-height: 20px; }
+  #status { font-size: 14px; color: #475569; margin-bottom: 16px; min-height: 20px; line-height: 1.6; }
+
+  .resume-bar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #065f46;
+    animation: slideDown .3s ease;
+  }
+  .resume-bar.show { display: flex; }
+  .resume-bar .resume-icon { font-size: 18px; flex-shrink: 0; }
+  .resume-bar .resume-text { flex: 1; }
+  .resume-bar .resume-text strong { font-weight: 600; }
+  .resume-bar button {
+    font-size: 13px; padding: 6px 14px; border-radius: 8px;
+    background: #fff; border: 1px solid #6ee7b7; color: #065f46;
+  }
+  .resume-bar button:hover { background: #d1fae5; }
+  .resume-bar button.resume-primary {
+    background: #10b981; border-color: #10b981; color: #fff;
+  }
+  .resume-bar button.resume-primary:hover { background: #059669; }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .bookmarks-panel {
+    display: none;
+    margin-bottom: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fffbeb;
+    overflow: hidden;
+    animation: slideDown .25s ease;
+  }
+  .bookmarks-panel.show { display: block; }
+  .bookmarks-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    background: #fef3c7;
+    border-bottom: 1px solid #fde68a;
+    font-size: 14px; font-weight: 600; color: #78350f;
+    flex-wrap: wrap;
+  }
+  .bookmarks-header .bookmarks-title { flex: 1; min-width: 70px; }
+  .bookmarks-header .bookmarks-count {
+    font-size: 12px; font-weight: 500; color: #92400e;
+    background: #fde68a; padding: 2px 10px; border-radius: 10px;
+    white-space: nowrap;
+  }
+  .bookmarks-header .force-toggle {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 500; color: #78350f;
+    cursor: pointer; user-select: none; white-space: nowrap;
+    background: #fff; border: 1px solid #fde68a;
+    padding: 4px 10px; border-radius: 6px;
+  }
+  .bookmarks-header .force-toggle:hover { background: #fef3c7; }
+  .bookmarks-header .force-toggle input { margin: 0; cursor: pointer; }
+  .bookmarks-header button {
+    font-size: 12px; padding: 4px 10px; border-radius: 6px;
+    background: #fff; border: 1px solid #fde68a; color: #78350f;
+  }
+  .bookmarks-header button:hover { background: #fef3c7; }
+  .bookmarks-list {
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 8px 12px;
+  }
+  .bookmark-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    background: #fff;
+    border: 1px solid #fde68a;
+    border-radius: 8px;
+    transition: all .15s;
+  }
+  .bookmark-item:last-child { margin-bottom: 0; }
+  .bookmark-item:hover { border-color: #fbbf24; background: #fffbeb; }
+  .bookmark-item.other-file {
+    opacity: .85;
+    border-style: dashed;
+    background: #fefce8;
+  }
+  .bookmark-item .bm-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .bookmark-item .bm-content { flex: 1; min-width: 0; }
+  .bookmark-item .bm-file {
+    font-size: 12px; color: #6b7280; font-weight: 500;
+    margin-bottom: 3px; word-break: break-all;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .bookmark-item.other-file .bm-file { color: #b45309; }
+  .bookmark-item .bm-source {
+    font-size: 11.5px;
+    color: #a16207;
+    margin-bottom: 3px;
+    word-break: break-all;
+    line-height: 1.5;
+  }
+  .bookmark-item .bm-source-toggle {
+    font-size: 11px;
+    padding: 1px 6px;
+    margin-left: 4px;
+    border-radius: 4px;
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+    color: #92400e;
+    cursor: pointer;
+    font-family: inherit;
+    vertical-align: middle;
+  }
+  .bookmark-item .bm-source-toggle:hover { background: #fde68a; }
+  .bookmark-item .bm-source-full {
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #fefce8;
+    border: 1px dashed #fde68a;
+    border-radius: 6px;
+    font-size: 11px;
+    color: #78350f;
+  }
+  .bookmark-item .bm-line {
+    font-size: 12px; color: #92400e; font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .bookmark-item .bm-preview {
+    font-size: 13px; color: #475569;
+    overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-bottom: 2px;
+  }
+  .bookmark-item .bm-time {
+    font-size: 11px; color: #94a3b8;
+  }
+  .bookmark-item .bm-actions {
+    display: flex; gap: 4px; flex-shrink: 0;
+  }
+  .bookmark-item .bm-actions button {
+    font-size: 12px; padding: 4px 8px; border-radius: 6px;
+    background: #fff; border: 1px solid #e5e7eb; color: #334155;
+  }
+  .bookmark-item .bm-actions button:hover:not(:disabled) { background: #f1f5f9; }
+  .bookmark-item .bm-actions button:disabled { opacity: .45; cursor: not-allowed; }
+  .bookmark-item .bm-actions button.bm-delete:hover { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+  .bookmarks-empty {
+    padding: 20px 16px;
+    text-align: center;
+    font-size: 13px;
+    color: #94a3b8;
+    line-height: 1.7;
+  }
+  .bookmarks-empty .inline-force-btn {
+    margin-top: 12px;
+    font-size: 13px; padding: 7px 14px; border-radius: 8px;
+    background: #fff; border: 1px solid #fbbf24; color: #92400e;
+    cursor: pointer; font-family: inherit;
+  }
+  .bookmarks-empty .inline-force-btn:hover { background: #fef3c7; }
+
+  .results-section {
+    border: 1px solid #e5e7eb; border-radius: 10px;
+    overflow: hidden; background: #fff;
+  }
+  .results-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: #f8fafc;
+    cursor: pointer; user-select: none;
+    font-size: 14px; font-weight: 600; color: #334155;
+    transition: background .15s;
+  }
+  .results-header:hover { background: #f1f5f9; }
+  .results-header .toggle-icon {
+    font-size: 12px; color: #64748b;
+    transition: transform .2s ease;
+    display: inline-block;
+    width: 16px; text-align: center;
+  }
+  .results-section.collapsed .results-header .toggle-icon {
+    transform: rotate(-90deg);
+  }
+  .results-header .results-title { flex: 1; }
+  .results-header .results-badge {
+    font-size: 12px; font-weight: 500; color: #64748b;
+    background: #e2e8f0; padding: 2px 10px; border-radius: 10px;
+    font-variant-numeric: tabular-nums;
+  }
+  .results-body {
+    max-height: 2000px;
+    overflow: hidden;
+    transition: max-height .3s ease, opacity .2s ease, padding .3s ease;
+    opacity: 1;
+    padding: 12px 16px 16px;
+  }
+  .results-section.collapsed .results-body {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  .results-section.collapsed { border-radius: 10px; }
+
   .result-item {
     border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px 18px;
-    margin-bottom: 12px; background: #fafafa;
+    margin-bottom: 12px; background: #fafafa; position: relative;
   }
-  .result-item h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #1e293b; word-break: break-all; }
+  .result-item:last-child { margin-bottom: 0; }
+  .result-item h3 { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: #1e293b; word-break: break-all; padding-right: 36px; }
   .result-item h3.failed { color: #dc2626; }
   .result-item p { margin: 0 0 10px; font-size: 13px; color: #64748b; }
   .result-item .actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -47,6 +256,16 @@
   .result-item button:hover { background: #f1f5f9; }
   .result-item button.preview-btn { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
   .result-item button.preview-btn:hover { background: #dbeafe; }
+  .result-item button.delete-btn { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+  .result-item button.delete-btn:hover { background: #fee2e2; }
+
+  .card-delete {
+    position: absolute; top: 10px; right: 12px;
+    background: transparent; border: none; font-size: 18px; line-height: 1;
+    color: #94a3b8; cursor: pointer; padding: 4px 8px; border-radius: 6px;
+    transition: all .15s;
+  }
+  .card-delete:hover { background: #fee2e2; color: #dc2626; }
 
   .preview-section {
     margin-bottom: 28px; border: 1px solid #e5e7eb; border-radius: 10px;
@@ -73,26 +292,137 @@
   .preview-body:disabled { color: #94a3b8; background: #fcfcfd; }
 
   .pager {
-    display: flex; align-items: center; justify-content: center; gap: 14px;
-    padding: 12px 14px; background: #f8fafc; border-top: 1px solid #e5e7eb;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 14px; background: #f8fafc; border-top: 1px solid #e5e7eb;
+    flex-wrap: wrap;
   }
   .pager button {
     font-size: 16px; padding: 6px 14px; border-radius: 8px; background: #fff;
     border: 1px solid #cbd5e1; color: #1e293b; cursor: pointer; min-width: 44px; transition: all .15s;
+    height: 36px;
   }
   .pager button:hover:not(:disabled) { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+  .pager button:disabled { opacity: .5; cursor: not-allowed; }
   .pager .page-indicator {
-    font-size: 14px; color: #334155; min-width: 90px; text-align: center;
+    font-size: 14px; color: #334155; text-align: center;
+    font-variant-numeric: tabular-nums;
+    min-width: 60px;
+  }
+
+  .jump-group {
+    display: flex; align-items: center; gap: 4px;
+    margin-left: 4px;
+  }
+  .jump-input {
+    width: 56px; padding: 6px 8px; font-size: 13px; font-family: inherit;
+    border: 1px solid #cbd5e1; border-radius: 6px; text-align: center;
+    font-variant-numeric: tabular-nums; color: #1e293b; background: #fff;
+    height: 36px;
+  }
+  .jump-input:focus { outline: 2px solid #3b82f6; outline-offset: 1px; border-color: #3b82f6; }
+  .jump-total { font-size: 13px; color: #64748b; white-space: nowrap; }
+
+  .search-group {
+    display: flex; align-items: center; gap: 4px;
+    margin-left: auto;
+  }
+  .search-input {
+    width: 120px; padding: 6px 10px; font-size: 13px; font-family: inherit;
+    border: 1px solid #cbd5e1; border-radius: 6px;
+    color: #1e293b; background: #fff;
+    height: 36px;
+    transition: border-color .15s, width .2s;
+  }
+  .search-input:focus { outline: 2px solid #3b82f6; outline-offset: 1px; border-color: #3b82f6; }
+  .search-btn {
+    padding: 6px 12px; font-size: 13px; height: 36px; border-radius: 6px;
+    background: #fff; border: 1px solid #cbd5e1; color: #1e293b; cursor: pointer;
+  }
+  .search-btn:hover { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+  .search-info {
+    font-size: 12px; color: #64748b; white-space: nowrap;
     font-variant-numeric: tabular-nums;
   }
-  .pager .pager-spacer { flex: 1; }
+
+  .bookmark-btn {
+    background: #fffbeb !important;
+    border-color: #fde68a !important;
+    color: #92400e !important;
+    font-size: 16px !important;
+    padding: 6px 10px !important;
+    min-width: 40px !important;
+  }
+  .bookmark-btn:hover:not(:disabled) {
+    background: #fef3c7 !important;
+    border-color: #fbbf24 !important;
+    color: #78350f !important;
+  }
+  .bookmark-btn.active {
+    background: #fbbf24 !important;
+    border-color: #f59e0b !important;
+    color: #fff !important;
+  }
+
+  .bookmark-list-btn {
+    font-size: 13px !important;
+    padding: 6px 12px !important;
+    height: 36px;
+    position: relative;
+  }
+  .bookmark-list-btn .bm-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    background: #f59e0b;
+    color: #fff;
+    font-size: 10px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    font-weight: 600;
+  }
+
+  .search-highlight {
+    background: #fef08a;
+    border-radius: 2px;
+    box-shadow: 0 0 0 2px #fef08a;
+  }
+  .search-highlight.current {
+    background: #fb923c;
+    box-shadow: 0 0 0 2px #fb923c;
+    color: #fff;
+  }
+
+  .preview-wrap {
+    position: relative;
+    background: #fcfcfd;
+  }
+  .preview-highlight-layer {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    padding: 18px 20px;
+    font-family: "Cascadia Code", Consolas, "JetBrains Mono", "Courier New", monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: transparent;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow: hidden;
+    box-sizing: border-box;
+    z-index: 2;
+  }
+  .preview-body { position: relative; z-index: 1; background: transparent !important; }
+
   .pager .settings-btn { font-size: 13px; padding: 6px 12px; min-width: auto; color: #334155; }
   .pager .settings-btn:hover:not(:disabled) { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
 
   .error { color: #dc2626; }
   .page-zone { display: none; }
 
-  /* ===== 全屏模式 ===== */
   .preview-section:fullscreen, .preview-section:-webkit-full-screen {
     position: relative; border-radius: 0; border: none; margin: 0;
     display: flex; flex-direction: column; background: #fff; width: 100%; height: 100%;
@@ -104,12 +434,18 @@
     justify-content: flex-end;
     gap: 16px;
   }
-  .preview-section:fullscreen .preview-body, .preview-section:-webkit-full-screen .preview-body {
+  .preview-section:fullscreen .preview-wrap, .preview-section:-webkit-full-screen .preview-wrap {
     flex: 1; width: 100%; height: auto; min-height: 0;
-    padding-top: 64px; padding-bottom: 48px; background: #fff;
+    background: #fff;
+  }
+  .preview-section:fullscreen .preview-body, .preview-section:-webkit-full-screen .preview-body {
+    width: 100%; height: 100%;
+    padding-top: 64px; padding-bottom: 48px; background: transparent !important;
+  }
+  .preview-section:fullscreen .preview-highlight-layer, .preview-section:-webkit-full-screen .preview-highlight-layer {
+    padding-top: 64px; padding-bottom: 48px;
   }
 
-  /* 全屏时隐藏标题和除退出全屏外的按钮 */
   .preview-section:fullscreen .preview-title,
   .preview-section:-webkit-full-screen .preview-title,
   .preview-section:fullscreen #downloadConcatBtn,
@@ -121,7 +457,6 @@
     display: none;
   }
 
-  /* 全屏时页码样式 */
   .preview-section:fullscreen .preview-count,
   .preview-section:-webkit-full-screen .preview-count {
     font-size: 14px;
@@ -130,12 +465,10 @@
     white-space: nowrap;
   }
 
-  /* 全屏时隐藏底部翻页条 */
   .preview-section:fullscreen .pager, .preview-section:-webkit-full-screen .pager {
     display: none !important;
   }
 
-  /* 左右翻页热区：全屏时显示 */
   .preview-section:fullscreen .page-zone, .preview-section:-webkit-full-screen .page-zone {
     display: flex; position: absolute; top: 0; bottom: 0; width: 12%; min-width: 70px;
     align-items: center; justify-content: center; cursor: pointer; z-index: 5;
@@ -154,7 +487,6 @@
     cursor: default; opacity: 0; pointer-events: none;
   }
 
-  /* ===== 设置弹窗 ===== */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(15, 23, 42, .45);
     display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -212,7 +544,7 @@
     padding: 14px 20px; border-top: 1px solid #e5e7eb; background: #f8fafc;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 700px) {
     .app { padding: 20px 16px; }
     .toolbar { flex-direction: column; align-items: stretch; }
     select, button { width: 100%; }
@@ -220,6 +552,8 @@
     .pager { flex-wrap: wrap; }
     .pager button { min-width: 40px; }
     .preview-body { font-size: 13px; }
+    .search-group { margin-left: 0; width: 100%; }
+    .search-input { flex: 1; width: auto; }
     .preview-section:fullscreen .page-zone, .preview-section:-webkit-full-screen .page-zone {
       width: 20%; min-width: 80px; font-size: 28px;
     }
@@ -228,8 +562,8 @@
 </head>
 <body>
 <div class="app">
-  <h1>JSON剧本提取阅读器</h1>
-  <p class="sub">从剧本 JSON 中提取指定语言的对话文本。也可以直接上传 TXT 文件绕过解析，在预览区直接阅读（自动识别 UTF-8 / GBK / GB18030 / Big5 编码）。全屏时可用鼠标滚轮切换上下页。</p>
+  <h1>JSON剧本提取阅读器 · 书签 + 续读</h1>
+  <p class="sub">从剧本 JSON 中提取指定语言的对话文本。支持自动续读、手动书签、跳页和全文搜索。书签和进度保存在浏览器缓存中，请勿清理缓存，否则会丢失。</p>
 
   <div class="toolbar">
     <label for="language">提取语言：</label>
@@ -249,6 +583,29 @@
 
   <div id="status"></div>
 
+  <div class="resume-bar" id="resumeBar">
+    <span class="resume-icon">📖</span>
+    <span class="resume-text" id="resumeText"></span>
+    <button class="resume-primary" id="resumeBtn">继续阅读</button>
+    <button id="resumeDismissBtn">从头开始</button>
+  </div>
+
+  <div class="bookmarks-panel" id="bookmarksPanel">
+    <div class="bookmarks-header">
+      <span>🔖</span>
+      <span class="bookmarks-title">我的书签</span>
+      <span class="bookmarks-count" id="bookmarksCount">0 个</span>
+      <label class="force-toggle" title="显示所有文件的书签（不仅当前文件）">
+        <input type="checkbox" id="forceShowAllToggle">
+        显示全部文件
+      </label>
+      <button id="bookmarksCloseBtn">收起</button>
+    </div>
+    <div class="bookmarks-list" id="bookmarksList">
+      <div class="bookmarks-empty">还没有书签，阅读时点击 🔖 按钮添加</div>
+    </div>
+  </div>
+
   <div class="preview-section" id="previewSection">
     <div class="preview-header">
       <span class="preview-title" id="previewTitle">预览区</span>
@@ -262,18 +619,50 @@
     <div class="page-zone left" id="pageZoneLeft" title="上一页"><span>◀</span></div>
     <div class="page-zone right" id="pageZoneRight" title="下一页"><span>▶</span></div>
 
-    <textarea class="preview-body" id="previewBody" readonly rows="20" wrap="soft" placeholder="点击结果卡片中的「拼接预览」按钮查看拼接文本，或使用「选择 TXT 直接预览」快速阅读纯文本。"></textarea>
+    <div class="preview-wrap" id="previewWrap">
+      <textarea class="preview-body" id="previewBody" readonly rows="20" wrap="soft" placeholder="点击结果卡片中的「拼接预览」按钮查看拼接文本，或使用「选择 TXT 直接预览」快速阅读纯文本。"></textarea>
+      <div class="preview-highlight-layer" id="previewHighlightLayer" aria-hidden="true"></div>
+    </div>
 
     <div class="pager" id="pager" style="display:none;">
       <button id="prevPageBtn" title="上一页">◀</button>
       <span class="page-indicator" id="pageIndicator">1 / 1</span>
       <button id="nextPageBtn" title="下一页">▶</button>
-      <span class="pager-spacer"></span>
+
+      <div class="jump-group">
+        <input type="number" class="jump-input" id="jumpInput" min="1" placeholder="页" title="跳转到指定页">
+        <span class="jump-total" id="jumpTotal">/ 1</span>
+        <button class="search-btn" id="jumpBtn" title="跳转">跳转</button>
+      </div>
+
+      <div class="search-group">
+        <input type="text" class="search-input" id="searchInput" placeholder="搜索文本..." title="输入关键词后按 Enter 搜索">
+        <button class="search-btn" id="searchBtn" title="搜索">🔍</button>
+        <span class="search-info" id="searchInfo"></span>
+        <button class="search-btn" id="searchPrevBtn" title="上一个结果" style="display:none;">↑</button>
+        <button class="search-btn" id="searchNextBtn" title="下一个结果" style="display:none;">↓</button>
+        <button class="search-btn" id="searchClearBtn" title="清除搜索" style="display:none;">✕</button>
+      </div>
+
+      <button id="bookmarkBtn" class="bookmark-btn" title="在当前页添加书签" disabled>🔖</button>
+      <button id="bookmarkListBtn" class="search-btn bookmark-list-btn" title="查看书签列表" style="display:none;">
+        📑<span class="bm-badge" id="bmBadge">0</span>
+      </button>
+
       <button id="openSettingsBtn" class="settings-btn" title="设置">⚙ 设置</button>
     </div>
   </div>
 
-  <div id="results"></div>
+  <div class="results-section" id="resultsSection">
+    <div class="results-header" id="resultsHeader">
+      <span class="toggle-icon" id="toggleIcon">▼</span>
+      <span class="results-title">文件列表</span>
+      <span class="results-badge" id="resultsBadge">0 个</span>
+    </div>
+    <div class="results-body" id="resultsBody">
+      <div id="results"></div>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="settingsOverlay">
@@ -334,6 +723,53 @@ function naturalCompare(a, b) {
   return (strA.length - i) - (strB.length - j);
 }
 
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatTime(ts) {
+  const diff = Date.now() - ts;
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`;
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`;
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)} 天前`;
+  const d = new Date(ts);
+  return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
+
+// ========== 存档系统（localStorage） ==========
+const STORAGE_KEY_PROGRESS = 'scn_reader_progress';
+const STORAGE_KEY_BOOKMARKS = 'scn_reader_bookmarks';
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_PROGRESS);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+function saveProgress(data) {
+  try { localStorage.setItem(STORAGE_KEY_PROGRESS, JSON.stringify(data)); } catch (e) {}
+}
+function loadBookmarks() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_BOOKMARKS);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+function saveBookmarks(list) {
+  try { localStorage.setItem(STORAGE_KEY_BOOKMARKS, JSON.stringify(list)); } catch (e) {}
+}
+
+let saveProgressTimer = null;
+function scheduleSaveProgress(fileKey, displayName, line, page) {
+  if (saveProgressTimer) clearTimeout(saveProgressTimer);
+  saveProgressTimer = setTimeout(() => {
+    const data = loadProgress();
+    data[fileKey] = { line, page, time: Date.now(), fileName: displayName };
+    saveProgress(data);
+  }, 400);
+}
+
 // ========== 编码检测 ==========
 function detectEncoding(bytes) {
   if (!bytes || bytes.length === 0) return 'UTF-8';
@@ -380,12 +816,7 @@ function detectEncoding(bytes) {
     }
     return total === 0 ? 0 : hits / total;
   }
-  if (isValidUTF8(sample)) {
-    let hasHigh = false;
-    for (let i = 0; i < sample.length; i++) if (sample[i] >= 0x80) { hasHigh = true; break; }
-    if (!hasHigh) return 'UTF-8';
-    return 'UTF-8';
-  }
+  if (isValidUTF8(sample)) return 'UTF-8';
   const gbkScore = countCJK(sample, false);
   const big5Score = countCJK(sample, true);
   if (big5Score > gbkScore && big5Score > 0.85) return 'Big5';
@@ -401,11 +832,8 @@ function decodeBytes(bytes, encoding) {
   try {
     return new TextDecoder(label, { fatal: false }).decode(bytes);
   } catch (e) {
-    try {
-      return new TextDecoder('gb18030', { fatal: false }).decode(bytes);
-    } catch (e2) {
-      return new TextDecoder('UTF-8', { fatal: false }).decode(bytes);
-    }
+    try { return new TextDecoder('gb18030', { fatal: false }).decode(bytes); }
+    catch (e2) { return new TextDecoder('UTF-8', { fatal: false }).decode(bytes); }
   }
 }
 
@@ -422,10 +850,6 @@ function readFile(file) {
     reader.onerror = e => reject(e.target.error || new Error('读取失败'));
     reader.readAsArrayBuffer(file);
   });
-}
-
-function readFileText(file) {
-  return readFile(file).then(r => r.text);
 }
 
 const ALL_LANGUAGES = ['日文', '英文', '简体中文', '繁体中文'];
@@ -497,12 +921,32 @@ const fileInput = document.getElementById('fileInput');
 const folderInput = document.getElementById('folderInput');
 const txtInput = document.getElementById('txtInput');
 const statusDiv = document.getElementById('status');
+
+const resumeBar = document.getElementById('resumeBar');
+const resumeText = document.getElementById('resumeText');
+const resumeBtn = document.getElementById('resumeBtn');
+const resumeDismissBtn = document.getElementById('resumeDismissBtn');
+
+const bookmarksPanel = document.getElementById('bookmarksPanel');
+const bookmarksCount = document.getElementById('bookmarksCount');
+const bookmarksList = document.getElementById('bookmarksList');
+const bookmarksCloseBtn = document.getElementById('bookmarksCloseBtn');
+const bookmarkBtn = document.getElementById('bookmarkBtn');
+const bookmarkListBtn = document.getElementById('bookmarkListBtn');
+const bmBadge = document.getElementById('bmBadge');
+const forceShowAllToggle = document.getElementById('forceShowAllToggle');
+
+const resultsSection = document.getElementById('resultsSection');
+const resultsHeader = document.getElementById('resultsHeader');
+const resultsBadge = document.getElementById('resultsBadge');
+const resultsBody = document.getElementById('resultsBody');
 const resultsDiv = document.getElementById('results');
 
 const previewSection = document.getElementById('previewSection');
 const previewTitle = document.getElementById('previewTitle');
 const previewCount = document.getElementById('previewCount');
 const previewBody = document.getElementById('previewBody');
+const previewHighlightLayer = document.getElementById('previewHighlightLayer');
 const copyPreviewBtn = document.getElementById('copyPreviewBtn');
 const clearPreviewBtn = document.getElementById('clearPreviewBtn');
 const downloadConcatBtn = document.getElementById('downloadConcatBtn');
@@ -513,6 +957,17 @@ const prevPageBtn = document.getElementById('prevPageBtn');
 const nextPageBtn = document.getElementById('nextPageBtn');
 const pageIndicator = document.getElementById('pageIndicator');
 const openSettingsBtn = document.getElementById('openSettingsBtn');
+
+const jumpInput = document.getElementById('jumpInput');
+const jumpTotal = document.getElementById('jumpTotal');
+const jumpBtn = document.getElementById('jumpBtn');
+
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const searchInfo = document.getElementById('searchInfo');
+const searchPrevBtn = document.getElementById('searchPrevBtn');
+const searchNextBtn = document.getElementById('searchNextBtn');
+const searchClearBtn = document.getElementById('searchClearBtn');
 
 const pageZoneLeft = document.getElementById('pageZoneLeft');
 const pageZoneRight = document.getElementById('pageZoneRight');
@@ -528,11 +983,32 @@ let cachedFileResults = [];
 let extractionResults = [];
 let lastFiles = [];
 let currentPreviewText = '';
+let currentFileKey = '';
+let currentDisplayFileName = '';
+let currentSources = [];        // ★ 当前预览的准确来源文件列表
 let previewLines = [];
 let pageStartIndexes = [];
 let currentPage = 1;
 let pageSize = 20;
 let fontSize = 13.5;
+let resultsCollapsed = false;
+
+let forceShowAllBookmarks = false;
+
+let searchTerm = '';
+let searchResults = [];
+let currentSearchIndex = -1;
+
+// ========== 折叠功能 ==========
+function updateResultsBadge() {
+  const count = cachedFileResults.length;
+  resultsBadge.textContent = count === 0 ? '无文件' : `${count} 个文件`;
+}
+
+resultsHeader.addEventListener('click', () => {
+  resultsCollapsed = !resultsCollapsed;
+  resultsSection.classList.toggle('collapsed', resultsCollapsed);
+});
 
 // ========== 分页 ==========
 const _measureCanvas = document.createElement('canvas');
@@ -572,16 +1048,29 @@ function repaginate() {
   const linesPerPage = computeLogicalLinesPerPage();
   for (let i = 0; i < previewLines.length; i += linesPerPage) pageStartIndexes.push(i);
 }
+
+function findPageForLine(lineIndex) {
+  let page = 1;
+  for (let i = 0; i < pageStartIndexes.length; i++) {
+    if (pageStartIndexes[i] <= lineIndex) page = i + 1; else break;
+  }
+  return page;
+}
+
 function renderPage() {
   if (previewLines.length === 0) {
     previewBody.value = ''; previewBody.disabled = true;
+    previewHighlightLayer.innerHTML = '';
     pageIndicator.textContent = '0 / 0';
+    jumpTotal.textContent = '/ 0';
     previewCount.textContent = '';
     prevPageBtn.disabled = true; nextPageBtn.disabled = true;
+    bookmarkBtn.disabled = true;
     pageZoneLeft.classList.add('disabled'); pageZoneRight.classList.add('disabled');
     return;
   }
   previewBody.disabled = false;
+  bookmarkBtn.disabled = false;
   const totalPages = pageStartIndexes.length;
   if (currentPage > totalPages) currentPage = totalPages;
   if (currentPage < 1) currentPage = 1;
@@ -591,6 +1080,8 @@ function renderPage() {
   previewBody.scrollTop = 0;
 
   pageIndicator.textContent = `${currentPage} / ${totalPages}`;
+  jumpTotal.textContent = `/ ${totalPages}`;
+  jumpInput.max = totalPages;
 
   if (isFullscreen()) {
     previewCount.textContent = `${currentPage} / ${totalPages}`;
@@ -602,9 +1093,54 @@ function renderPage() {
   nextPageBtn.disabled = currentPage >= totalPages;
   pageZoneLeft.classList.toggle('disabled', currentPage <= 1);
   pageZoneRight.classList.toggle('disabled', currentPage >= totalPages);
+
+  if (currentFileKey) {
+    scheduleSaveProgress(currentFileKey, currentDisplayFileName, start, currentPage);
+  }
+
+  updateBookmarkBtnState();
+  updateHighlightLayer(start, nextStart);
 }
-function setPreviewContent(title, textContent) {
+
+function updateHighlightLayer(startLine, endLine) {
+  if (!searchTerm || searchResults.length === 0) {
+    previewHighlightLayer.innerHTML = '';
+    return;
+  }
+  let html = '';
+  for (let lineIdx = startLine; lineIdx < endLine; lineIdx++) {
+    const lineText = previewLines[lineIdx] || '';
+    let lineHtml = '';
+    let lastIndex = 0;
+    const matchesInLine = searchResults.filter(r => r.lineIndex === lineIdx);
+    if (matchesInLine.length === 0) {
+      lineHtml = escapeHtml(lineText);
+    } else {
+      for (const m of matchesInLine) {
+        if (m.charIndex > lastIndex) {
+          lineHtml += escapeHtml(lineText.slice(lastIndex, m.charIndex));
+        }
+        const isCurrent = (searchResults[currentSearchIndex] &&
+                          searchResults[currentSearchIndex].lineIndex === m.lineIndex &&
+                          searchResults[currentSearchIndex].charIndex === m.charIndex);
+        lineHtml += `<span class="search-highlight${isCurrent ? ' current' : ''}">${escapeHtml(lineText.slice(m.charIndex, m.charIndex + m.length))}</span>`;
+        lastIndex = m.charIndex + m.length;
+      }
+      if (lastIndex < lineText.length) {
+        lineHtml += escapeHtml(lineText.slice(lastIndex));
+      }
+    }
+    html += lineHtml + '\n';
+  }
+  previewHighlightLayer.innerHTML = html.replace(/\n$/, '');
+}
+
+// ★ 新增 sources 参数
+function setPreviewContent(title, textContent, fileKey, sourceLabel, sources) {
   currentPreviewText = textContent || '';
+  currentFileKey = fileKey || title;
+  currentDisplayFileName = (fileKey === '__CONCAT__') ? '拼接预览' : (fileKey || title);
+  currentSources = Array.isArray(sources) ? sources.slice() : [];
   previewTitle.textContent = title;
   previewLines = currentPreviewText === '' ? [] : currentPreviewText.split('\n');
   currentPage = 1;
@@ -614,17 +1150,306 @@ function setPreviewContent(title, textContent) {
   copyPreviewBtn.disabled = !hasContent;
   clearPreviewBtn.disabled = !hasContent;
   fullscreenBtn.disabled = !hasContent;
+  bookmarkBtn.disabled = !hasContent;
+  resetForceShowAll();
+  clearSearch(true);
   renderPage();
+
+  if (hasContent && currentFileKey) {
+    checkResumePrompt();
+  } else {
+    hideResumeBar();
+  }
+
+  renderBookmarksList();
 }
+
 function clearPreview() {
   currentPreviewText = ''; previewLines = []; pageStartIndexes = []; currentPage = 1;
+  currentFileKey = '';
+  currentDisplayFileName = '';
+  currentSources = [];
   previewTitle.textContent = '预览区'; previewCount.textContent = '';
   previewBody.value = ''; previewBody.disabled = true;
-  pager.style.display = 'none'; pager.classList.remove('hidden');
+  previewHighlightLayer.innerHTML = '';
+  pager.style.display = 'none';
   copyPreviewBtn.disabled = true; clearPreviewBtn.disabled = true;
   downloadConcatBtn.disabled = true; fullscreenBtn.disabled = true;
+  bookmarkBtn.disabled = true;
   pageZoneLeft.classList.add('disabled'); pageZoneRight.classList.add('disabled');
+  resetForceShowAll();
+  clearSearch(true);
+  hideResumeBar();
+  renderBookmarksList();
 }
+
+function resetForceShowAll() {
+  forceShowAllBookmarks = false;
+  if (forceShowAllToggle) forceShowAllToggle.checked = false;
+}
+
+// ========== 续读功能 ==========
+let pendingResumeLine = null;
+
+function checkResumePrompt() {
+  if (!currentFileKey) { hideResumeBar(); return; }
+  const progress = loadProgress();
+  const saved = progress[currentFileKey];
+  if (!saved || typeof saved.line !== 'number' || saved.line <= 0) {
+    hideResumeBar();
+    return;
+  }
+  if (saved.fileName && currentDisplayFileName && saved.fileName !== currentDisplayFileName) {
+    hideResumeBar();
+    return;
+  }
+  if (saved.line >= previewLines.length) { hideResumeBar(); return; }
+  pendingResumeLine = saved.line;
+  const page = findPageForLine(saved.line);
+  const timeStr = formatTime(saved.time);
+  resumeText.innerHTML = `上次读到第 <strong>${page}</strong> 页（共 ${pageStartIndexes.length} 页）· ${timeStr}`;
+  resumeBar.classList.add('show');
+}
+
+function hideResumeBar() {
+  resumeBar.classList.remove('show');
+  pendingResumeLine = null;
+}
+
+resumeBtn.addEventListener('click', () => {
+  if (pendingResumeLine === null) return;
+  const page = findPageForLine(pendingResumeLine);
+  currentPage = page;
+  renderPage();
+  hideResumeBar();
+});
+
+resumeDismissBtn.addEventListener('click', () => {
+  hideResumeBar();
+});
+
+// ========== 书签功能 ==========
+function getCurrentLine() {
+  if (previewLines.length === 0) return 0;
+  return pageStartIndexes[currentPage - 1] || 0;
+}
+
+function isCurrentPageBookmarked() {
+  if (!currentFileKey) return false;
+  const line = getCurrentLine();
+  const bookmarks = loadBookmarks();
+  return bookmarks.some(b => b.file === currentFileKey && b.line === line);
+}
+
+function updateBookmarkBtnState() {
+  if (!currentFileKey || previewLines.length === 0) {
+    bookmarkBtn.classList.remove('active');
+    bookmarkBtn.disabled = true;
+    return;
+  }
+  bookmarkBtn.disabled = false;
+  if (isCurrentPageBookmarked()) {
+    bookmarkBtn.classList.add('active');
+    bookmarkBtn.title = '当前页已有书签，点击删除';
+  } else {
+    bookmarkBtn.classList.remove('active');
+    bookmarkBtn.title = '在当前页添加书签';
+  }
+}
+
+bookmarkBtn.addEventListener('click', () => {
+  if (!currentFileKey || previewLines.length === 0) return;
+  const line = getCurrentLine();
+  let bookmarks = loadBookmarks();
+  const existingIdx = bookmarks.findIndex(b => b.file === currentFileKey && b.line === line);
+  if (existingIdx >= 0) {
+    bookmarks.splice(existingIdx, 1);
+    saveBookmarks(bookmarks);
+  } else {
+    const previewText = (previewLines[line] || '').slice(0, 40);
+    bookmarks.push({
+      file: currentFileKey,
+      fileName: currentDisplayFileName || currentFileKey,
+      sources: currentSources.slice(),   // ★ 准确来源
+      line: line,
+      preview: previewText,
+      time: Date.now()
+    });
+    const sameFile = bookmarks.filter(b => b.file === currentFileKey);
+    if (sameFile.length > 50) {
+      const oldest = sameFile.reduce((a, b) => a.time < b.time ? a : b);
+      bookmarks = bookmarks.filter(b => b !== oldest);
+    }
+    saveBookmarks(bookmarks);
+  }
+  updateBookmarkBtnState();
+  renderBookmarksList();
+});
+
+function isBookmarkOfCurrentFile(bm) {
+  if (!currentFileKey) return false;
+  if (bm.file === currentFileKey) return true;
+  const bmName = bm.fileName || (bm.file === '__CONCAT__' ? '拼接预览' : bm.file);
+  return !!(bmName && currentDisplayFileName && bmName === currentDisplayFileName);
+}
+
+// 书签列表渲染
+function renderBookmarksList() {
+  const bookmarks = loadBookmarks();
+
+  const currentBookmarks = bookmarks.filter(isBookmarkOfCurrentFile);
+  const otherBookmarks = bookmarks.filter(b => !isBookmarkOfCurrentFile(b));
+
+  let visibleBookmarks;
+  if (forceShowAllBookmarks) {
+    visibleBookmarks = [
+      ...currentBookmarks.sort((a, b) => a.line - b.line),
+      ...otherBookmarks.sort((a, b) => {
+        const fa = a.fileName || a.file, fb = b.fileName || b.file;
+        if (fa !== fb) return String(fa).localeCompare(String(fb));
+        return a.line - b.line;
+      })
+    ];
+  } else {
+    visibleBookmarks = currentBookmarks.sort((a, b) => a.line - b.line);
+  }
+
+  bookmarksCount.textContent = forceShowAllBookmarks
+    ? `${visibleBookmarks.length} 个（全部）`
+    : `${visibleBookmarks.length} 个`;
+  bmBadge.textContent = visibleBookmarks.length;
+
+  if (bookmarks.length > 0) {
+    bookmarkListBtn.style.display = 'inline-block';
+  } else {
+    bookmarkListBtn.style.display = 'none';
+    bookmarksPanel.classList.remove('show');
+  }
+
+  if (visibleBookmarks.length === 0) {
+    let emptyMsg = '当前文件还没有书签，阅读时点击 🔖 按钮添加';
+    if (!forceShowAllBookmarks && otherBookmarks.length > 0) {
+      emptyMsg += `<br><br>检测到其他文件有 <strong>${otherBookmarks.length}</strong> 个书签。`
+        + `<br><button class="inline-force-btn" id="forceShowAllInlineBtn">🔓 强制显示全部书签</button>`;
+    }
+    bookmarksList.innerHTML = `<div class="bookmarks-empty">${emptyMsg}</div>`;
+    const inlineBtn = document.getElementById('forceShowAllInlineBtn');
+    if (inlineBtn) {
+      inlineBtn.addEventListener('click', () => {
+        forceShowAllBookmarks = true;
+        if (forceShowAllToggle) forceShowAllToggle.checked = true;
+        renderBookmarksList();
+      });
+    }
+    return;
+  }
+
+  let html = '';
+  for (const bm of visibleBookmarks) {
+    const isCurrentFile = isBookmarkOfCurrentFile(bm);
+    const page = isCurrentFile ? findPageForLine(bm.line) : null;
+    const displayFileName = bm.fileName || (bm.file === '__CONCAT__' ? '拼接预览' : bm.file);
+
+    // ★ 来源展示
+    let sourceHtml = '';
+    const sources = Array.isArray(bm.sources) ? bm.sources : null;
+    if (sources && sources.length > 0) {
+      if (sources.length === 1) {
+        sourceHtml = `<div class="bm-source">来源：${escapeHtml(sources[0])}</div>`;
+      } else {
+        const previewNames = sources.slice(0, 2).map(escapeHtml).join('、');
+        const moreCount = sources.length - 2;
+        sourceHtml = `
+          <div class="bm-source">
+            来源：${previewNames}${moreCount > 0 ? ` 等 ${sources.length} 个文件` : ''}
+            <button type="button" class="bm-source-toggle">展开</button>
+            <div class="bm-source-full" hidden>
+              ${sources.map(s => `<div>· ${escapeHtml(s)}</div>`).join('')}
+            </div>
+          </div>
+        `;
+      }
+    } else if (bm.file && bm.file !== '__CONCAT__') {
+      sourceHtml = `<div class="bm-source">来源：${escapeHtml(bm.file)}</div>`;
+    }
+
+    html += `
+      <div class="bookmark-item${isCurrentFile ? '' : ' other-file'}">
+        <span class="bm-icon">${isCurrentFile ? '🔖' : '📄'}</span>
+        <div class="bm-content">
+          <div class="bm-file" title="${escapeHtml(displayFileName)}">
+            <span>📄</span><span>${escapeHtml(displayFileName)}</span>
+          </div>
+          ${sourceHtml}
+          <div class="bm-line">${page ? `第 ${page} 页 · ` : ''}第 ${bm.line + 1} 行</div>
+          <div class="bm-preview">${escapeHtml(bm.preview || '（空行）')}</div>
+          <div class="bm-time">${formatTime(bm.time)}</div>
+        </div>
+        <div class="bm-actions">
+          <button data-action="goto"
+                  data-line="${bm.line}"
+                  data-file="${escapeHtml(bm.file)}"
+                  ${isCurrentFile ? '' : 'disabled title="仅当前文件可跳转"'}>跳转</button>
+          <button data-action="delete"
+                  data-line="${bm.line}"
+                  data-file="${escapeHtml(bm.file)}"
+                  class="bm-delete">删除</button>
+        </div>
+      </div>
+    `;
+  }
+  bookmarksList.innerHTML = html;
+}
+
+bookmarksList.addEventListener('click', (e) => {
+  // 展开/折叠来源
+  const toggle = e.target.closest('.bm-source-toggle');
+  if (toggle) {
+    const full = toggle.parentElement.querySelector('.bm-source-full');
+    if (full) {
+      if (full.hasAttribute('hidden')) {
+        full.removeAttribute('hidden');
+        toggle.textContent = '收起';
+      } else {
+        full.setAttribute('hidden', '');
+        toggle.textContent = '展开';
+      }
+    }
+    return;
+  }
+  const btn = e.target.closest('button');
+  if (!btn || btn.disabled) return;
+  const action = btn.dataset.action;
+  const line = parseInt(btn.dataset.line, 10);
+  const file = btn.dataset.file;
+  if (isNaN(line) || !file) return;
+
+  if (action === 'goto') {
+    if (file !== currentFileKey) return;
+    const page = findPageForLine(line);
+    currentPage = page;
+    renderPage();
+    bookmarksPanel.classList.remove('show');
+  } else if (action === 'delete') {
+    let bookmarks = loadBookmarks();
+    bookmarks = bookmarks.filter(b => !(b.file === file && b.line === line));
+    saveBookmarks(bookmarks);
+    updateBookmarkBtnState();
+    renderBookmarksList();
+  }
+});
+
+bookmarkListBtn.addEventListener('click', () => {
+  bookmarksPanel.classList.toggle('show');
+});
+bookmarksCloseBtn.addEventListener('click', () => {
+  bookmarksPanel.classList.remove('show');
+});
+
+forceShowAllToggle.addEventListener('change', (e) => {
+  forceShowAllBookmarks = e.target.checked;
+  renderBookmarksList();
+});
 
 // ========== 翻页 ==========
 function goPrev() { if (currentPage > 1) { currentPage--; renderPage(); } }
@@ -633,13 +1458,123 @@ prevPageBtn.addEventListener('click', goPrev);
 nextPageBtn.addEventListener('click', goNext);
 pageZoneLeft.addEventListener('click', goPrev);
 pageZoneRight.addEventListener('click', goNext);
-document.addEventListener('keydown', (e) => {
-  if (pager.style.display === 'none' && !isFullscreen()) return;
-  const tag = (e.target.tagName || '').toLowerCase();
-  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
-  if (e.key === 'ArrowLeft' && !prevPageBtn.disabled) { e.preventDefault(); goPrev(); }
-  else if (e.key === 'ArrowRight' && !nextPageBtn.disabled) { e.preventDefault(); goNext(); }
+
+function jumpToPage(page) {
+  const totalPages = pageStartIndexes.length;
+  if (totalPages === 0) return;
+  let target = parseInt(page, 10);
+  if (isNaN(target)) return;
+  target = Math.min(totalPages, Math.max(1, target));
+  if (target === currentPage) {
+    jumpInput.value = '';
+    return;
+  }
+  currentPage = target;
+  renderPage();
+  jumpInput.value = '';
+}
+jumpBtn.addEventListener('click', () => jumpToPage(jumpInput.value));
+jumpInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    jumpToPage(jumpInput.value);
+  }
 });
+
+// ========== 搜索功能 ==========
+function clearSearch(silent) {
+  searchTerm = '';
+  searchResults = [];
+  currentSearchIndex = -1;
+  searchInput.value = '';
+  searchInfo.textContent = '';
+  searchPrevBtn.style.display = 'none';
+  searchNextBtn.style.display = 'none';
+  searchClearBtn.style.display = 'none';
+  previewHighlightLayer.innerHTML = '';
+  if (!silent) renderPage();
+}
+
+function performSearch(term) {
+  if (!term || term.trim() === '') {
+    clearSearch();
+    return;
+  }
+  searchTerm = term;
+  searchResults = [];
+  currentSearchIndex = -1;
+
+  const lowerTerm = term.toLowerCase();
+  for (let lineIdx = 0; lineIdx < previewLines.length; lineIdx++) {
+    const line = previewLines[lineIdx] || '';
+    const lowerLine = line.toLowerCase();
+    let fromIndex = 0;
+    while (true) {
+      const idx = lowerLine.indexOf(lowerTerm, fromIndex);
+      if (idx === -1) break;
+      searchResults.push({ lineIndex: lineIdx, charIndex: idx, length: term.length });
+      fromIndex = idx + Math.max(1, term.length);
+    }
+  }
+
+  if (searchResults.length === 0) {
+    searchInfo.textContent = '未找到';
+    searchInfo.style.color = '#dc2626';
+    searchPrevBtn.style.display = 'none';
+    searchNextBtn.style.display = 'none';
+    searchClearBtn.style.display = 'inline-block';
+    previewHighlightLayer.innerHTML = '';
+    renderPage();
+    return;
+  }
+
+  searchInfo.style.color = '#64748b';
+  currentSearchIndex = 0;
+  searchPrevBtn.style.display = 'inline-block';
+  searchNextBtn.style.display = 'inline-block';
+  searchClearBtn.style.display = 'inline-block';
+  gotoSearchResult(0);
+}
+
+function gotoSearchResult(idx) {
+  if (idx < 0 || idx >= searchResults.length) return;
+  currentSearchIndex = idx;
+  const result = searchResults[idx];
+  const page = findPageForLine(result.lineIndex);
+  if (page !== currentPage) {
+    currentPage = page;
+    renderPage();
+  } else {
+    const start = pageStartIndexes[currentPage - 1];
+    const nextStart = currentPage < pageStartIndexes.length ? pageStartIndexes[currentPage] : previewLines.length;
+    updateHighlightLayer(start, nextStart);
+  }
+  searchInfo.textContent = `${idx + 1} / ${searchResults.length}`;
+}
+
+searchBtn.addEventListener('click', () => performSearch(searchInput.value));
+searchInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    performSearch(searchInput.value);
+  }
+});
+searchInput.addEventListener('input', () => {
+  if (searchInput.value === '' && searchTerm !== '') {
+    clearSearch();
+  }
+});
+searchPrevBtn.addEventListener('click', () => {
+  if (searchResults.length === 0) return;
+  const next = (currentSearchIndex - 1 + searchResults.length) % searchResults.length;
+  gotoSearchResult(next);
+});
+searchNextBtn.addEventListener('click', () => {
+  if (searchResults.length === 0) return;
+  const next = (currentSearchIndex + 1) % searchResults.length;
+  gotoSearchResult(next);
+});
+searchClearBtn.addEventListener('click', () => clearSearch());
 
 // ========== 全屏 + 滚轮翻页 ==========
 function isFullscreen() {
@@ -647,24 +1582,19 @@ function isFullscreen() {
          document.webkitFullscreenElement === previewSection;
 }
 
-// 全屏滚轮翻页监听器
 function handleFullscreenWheel(e) {
   if (!isFullscreen()) return;
   if (previewLines.length === 0) return;
-  // 只处理垂直滚轮
   if (Math.abs(e.deltaY) < 1) return;
   e.preventDefault();
   e.stopPropagation();
   if (e.deltaY > 0) {
-    // 向下滚动 → 下一页
     if (currentPage < pageStartIndexes.length) goNext();
   } else if (e.deltaY < 0) {
-    // 向上滚动 → 上一页
     if (currentPage > 1) goPrev();
   }
 }
 
-// 使用 passive: false 以便 preventDefault 阻止页面滚动
 previewSection.addEventListener('wheel', handleFullscreenWheel, { passive: false });
 
 fullscreenBtn.addEventListener('click', () => {
@@ -700,6 +1630,7 @@ function applyFontSize(size) {
   const clamped = Math.min(24, Math.max(10, size));
   fontSize = clamped;
   previewBody.style.fontSize = clamped + 'px';
+  previewHighlightLayer.style.fontSize = clamped + 'px';
   fontSizeSlider.value = String(clamped);
   fontSizeNumber.value = String(clamped);
   if (previewLines.length > 0) {
@@ -795,6 +1726,46 @@ clearPreviewBtn.addEventListener('click', () => {
   clearPreview();
 });
 
+// ========== 删除单个文件 ==========
+function removeFile(fileName) {
+  cachedFileResults = cachedFileResults.filter(c => c.fileName !== fileName);
+  extractionResults = extractionResults.filter(r => r.fileName !== fileName);
+  updateResultsBadge();
+
+  // 删除相关书签 + 更新拼接书签的 sources
+  let bookmarks = loadBookmarks();
+  bookmarks = bookmarks.filter(b => {
+    if (b.file === fileName) return false;
+    if (b.fileName === fileName && b.file !== '__CONCAT__') return false;
+
+    if (Array.isArray(b.sources) && b.sources.includes(fileName)) {
+      b.sources = b.sources.filter(s => s !== fileName);
+      if (b.sources.length === 0 && b.file === '__CONCAT__') return false;
+      if (b.file === '__CONCAT__') {
+        // 更新展示名
+        b.fileName = b.sources.length === 1
+          ? `拼接预览（${b.sources[0]}）`
+          : `拼接预览（${b.sources[0]} 等 ${b.sources.length} 个文件）`;
+      }
+    }
+    return true;
+  });
+  saveBookmarks(bookmarks);
+
+  if (cachedFileResults.length === 0) {
+    clearPreview();
+    statusDiv.textContent = '已删除全部文件。请重新选择 JSON 文件或 TXT。';
+    resultsDiv.innerHTML = '';
+    return;
+  }
+  renderResults();
+
+  const okCount = extractionResults.filter(r => !r.error && r.texts.length > 0).length;
+  if (okCount > 0) showConcatPreview();
+  else clearPreview();
+  statusDiv.textContent = `已删除「${fileName}」。当前剩余 ${cachedFileResults.length} 个文件。`;
+}
+
 // ========== 结果渲染 ==========
 function renderResults() {
   resultsDiv.innerHTML = '';
@@ -807,10 +1778,27 @@ function renderResults() {
       addResult(cached.fileName, `已提取 ${texts.length} 条文本（${lang}）`, texts.join('\n'), false);
     }
   }
+  updateResultsBadge();
 }
 function addResult(fileName, message, txtContent, failed) {
   const div = document.createElement('div');
   div.className = 'result-item';
+  const quickDel = document.createElement('button');
+  quickDel.className = 'card-delete';
+  quickDel.title = '删除此文件';
+  quickDel.textContent = '✕';
+  quickDel.onclick = (e) => {
+    e.stopPropagation();
+    if (failed) {
+      removeFile(fileName);
+    } else {
+      if (confirm(`确定要删除「${fileName}」吗？\n删除后将无法恢复，并会同步更新预览和书签。`)) {
+        removeFile(fileName);
+      }
+    }
+  };
+  div.appendChild(quickDel);
+
   const h3 = document.createElement('h3');
   h3.textContent = fileName;
   if (failed) h3.classList.add('failed');
@@ -834,7 +1822,8 @@ function addResult(fileName, message, txtContent, failed) {
     const singlePreviewBtn = document.createElement('button');
     singlePreviewBtn.textContent = '单独预览';
     singlePreviewBtn.onclick = () => {
-      setPreviewContent(fileName, txtContent);
+      // ★ 传 sources
+      setPreviewContent(fileName, txtContent, fileName, fileName, [fileName]);
       downloadConcatBtn.disabled = true;
       previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     };
@@ -852,6 +1841,32 @@ function addResult(fileName, message, txtContent, failed) {
       URL.revokeObjectURL(url);
     };
     actions.appendChild(downloadBtn);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'delete-btn';
+    delBtn.textContent = '删除';
+    delBtn.onclick = () => {
+      if (failed) {
+        removeFile(fileName);
+      } else {
+        if (confirm(`确定要删除「${fileName}」吗？\n删除后将无法恢复，并会同步更新预览和书签。`)) {
+          removeFile(fileName);
+        }
+      }
+    };
+    actions.appendChild(delBtn);
+
+    div.appendChild(actions);
+  } else {
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    const delBtn = document.createElement('button');
+    delBtn.className = 'delete-btn';
+    delBtn.textContent = '删除';
+    delBtn.onclick = () => {
+      removeFile(fileName);
+    };
+    actions.appendChild(delBtn);
     div.appendChild(actions);
   }
   resultsDiv.appendChild(div);
@@ -874,19 +1889,37 @@ function buildConcatText() {
   if (parts.length === 0) return null;
   return { text: parts.join('\n'), count: ok.length };
 }
+
 function showConcatPreview() {
   if (!extractionResults || extractionResults.length === 0) {
-    setPreviewContent('拼接预览', '请先选择 JSON 文件处理后再预览。');
+    setPreviewContent('拼接预览', '请先选择 JSON 文件处理后再预览。', '');
     downloadConcatBtn.disabled = true;
     return;
   }
   const result = buildConcatText();
   if (!result) {
-    setPreviewContent('拼接预览', '当前语言下没有成功提取的文本，无法拼接。');
+    setPreviewContent('拼接预览', '当前语言下没有成功提取的文本，无法拼接。', '');
     downloadConcatBtn.disabled = true;
     return;
   }
-  setPreviewContent(`拼接预览（${result.count} 个成功文件）`, result.text);
+
+  // ★ 拼接的准确来源文件列表
+  const okFiles = [...extractionResults]
+    .filter(r => !r.error && Array.isArray(r.texts) && r.texts.length > 0)
+    .sort((a, b) => naturalCompare(a.fileName, b.fileName))
+    .map(r => r.fileName);
+
+  const label = okFiles.length <= 1
+    ? (okFiles[0] || '')
+    : `${okFiles[0]} 等 ${okFiles.length} 个文件`;
+
+  setPreviewContent(
+    `拼接预览（${result.count} 个成功文件）`,
+    result.text,
+    '__CONCAT__',
+    label,
+    okFiles
+  );
   downloadConcatBtn.disabled = false;
 }
 
@@ -900,6 +1933,7 @@ async function processJsonFiles(files) {
   clearPreview();
   cachedFileResults = [];
   extractionResults = [];
+  updateResultsBadge();
   statusDiv.textContent = `共找到 ${jsonFiles.length} 个 JSON 文件，正在解析...`;
 
   let okCount = 0, failCount = 0;
@@ -943,12 +1977,13 @@ function handleJsonFiles(files) {
     resultsDiv.innerHTML = '';
     clearPreview();
     cachedFileResults = []; extractionResults = [];
+    updateResultsBadge();
     return;
   }
   processJsonFiles(lastFiles);
 }
 
-// ========== 处理 TXT（自动识别编码后直接预览） ==========
+// ========== 处理 TXT ==========
 async function handleTxtFiles(files) {
   const txtFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.txt'));
   if (txtFiles.length === 0) {
@@ -960,7 +1995,8 @@ async function handleTxtFiles(files) {
   try {
     statusDiv.textContent = `正在读取 ${file.name} ...`;
     const { text, encoding } = await readFile(file);
-    setPreviewContent(`📄 ${file.name}（TXT直读 · ${encoding}）`, text);
+    // ★ 传 sources
+    setPreviewContent(`📄 ${file.name}（TXT直读 · ${encoding}）`, text, file.name, file.name, [file.name]);
     downloadConcatBtn.disabled = true;
     statusDiv.textContent = `已直接加载：${file.name}（编码 ${encoding}，${text.length} 字符）`
       + (txtFiles.length > 1 ? ` · 共选中 ${txtFiles.length} 个，仅预览第一个` : '');
@@ -1000,9 +2036,34 @@ languageSelect.addEventListener('change', () => {
   else clearPreview();
 });
 
-// 初始化
-statusDiv.textContent = '请选择 JSON 文件或文件夹，或使用「选择 TXT 直接预览」快速阅读。全屏时可用滚轮翻页。';
-clearPreview();
+// ========== 初始化 ==========
+function init() {
+  statusDiv.textContent = '请选择 JSON 文件或文件夹，或使用「选择 TXT 直接预览」快速阅读。支持自动续读、书签、跳页、搜索。书签和进度保存在浏览器缓存中，清理缓存会丢失，请留意。';
+  updateResultsBadge();
+  clearPreview();
+  renderBookmarksList();
+}
+init();
+
+window.addEventListener('beforeunload', () => {
+  if (currentFileKey && previewLines.length > 0) {
+    const data = loadProgress();
+    data[currentFileKey] = {
+      line: pageStartIndexes[currentPage - 1] || 0,
+      page: currentPage,
+      time: Date.now(),
+      fileName: currentDisplayFileName
+    };
+    saveProgress(data);
+  }
+});
+
+window.addEventListener('storage', (e) => {
+  if (e.key === STORAGE_KEY_BOOKMARKS) {
+    renderBookmarksList();
+    updateBookmarkBtnState();
+  }
+});
 </script>
 </body>
 </html>
