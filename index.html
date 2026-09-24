@@ -228,8 +228,8 @@
 </head>
 <body>
 <div class="app">
-  <h1>JSON剧本提取阅读器</h1>
-  <p class="sub">从剧本 JSON 中提取指定语言的对话文本。也可以直接上传 TXT 文件绕过解析，在预览区直接阅读。</p>
+  <h1>Galgame 文本提取器</h1>
+  <p class="sub">从剧本 JSON 中提取指定语言的对话文本。也可以直接上传 TXT 文件绕过解析，在预览区直接阅读（自动识别 UTF-8 / GBK / GB18030 / Big5 编码）。</p>
 
   <div class="toolbar">
     <label for="language">提取语言：</label>
@@ -334,13 +334,123 @@ function naturalCompare(a, b) {
   return (strA.length - i) - (strB.length - j);
 }
 
+// ========== 编码检测 ==========
+// 返回 'UTF-8' | 'GBK' | 'Big5' | 'UTF-16LE' | 'UTF-16BE'
+function detectEncoding(bytes) {
+  if (!bytes || bytes.length === 0) return 'UTF-8';
+
+  // 1. BOM 检测
+  if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) return 'UTF-8';
+  if (bytes.length >= 2 && bytes[0] === 0xFF && bytes[1] === 0xFE) return 'UTF-16LE';
+  if (bytes.length >= 2 && bytes[0] === 0xFE && bytes[1] === 0xFF) return 'UTF-16BE';
+
+  // 2. 取前 64KB 做统计
+  const sample = bytes.slice(0, Math.min(bytes.length, 65536));
+
+  // 判断是否合法 UTF-8
+  function isValidUTF8(buf) {
+    let i = 0;
+    while (i < buf.length) {
+      const b = buf[i];
+      if (b < 0x80) { i++; continue; }
+      let extra = 0;
+      if ((b & 0xE0) === 0xC0) extra = 1;
+      else if ((b & 0xF0) === 0xE0) extra = 2;
+      else if ((b & 0xF8) === 0xF0) extra = 3;
+      else return false;
+      if (i + extra >= buf.length) return false;
+      for (let k = 1; k <= extra; k++) {
+        if ((buf[i + k] & 0xC0) !== 0x80) return false;
+      }
+      i += extra + 1;
+    }
+    return true;
+  }
+
+  // 判断是否像 GBK / Big5（高字节范围 0x81-0xFE，低字节 0x40-0xFE 排除 0x7F）
+  function countCJK(buf, isBig5) {
+    let hits = 0, total = 0, i = 0;
+    while (i < buf.length) {
+      const b = buf[i];
+      if (b < 0x80) { i++; continue; }
+      // 高字节
+      let lowMin = isBig5 ? 0x40 : 0x40;
+      let lowMax = isBig5 ? 0x7E : 0xFE; // Big5 低字节范围 0x40-0x7E + 0xA1-0xFE
+      if (isBig5) {
+        // Big5: 低字节 0x40-0x7E 或 0xA1-0xFE
+        if (i + 1 >= buf.length) break;
+        const lb = buf[i + 1];
+        if ((lb >= 0x40 && lb <= 0x7E) || (lb >= 0xA1 && lb <= 0xFE)) hits++;
+        total++;
+        i += 2;
+      } else {
+        // GBK: 高字节 0x81-0xFE，低字节 0x40-0xFE (排除 0x7F)
+        if (i + 1 >= buf.length) break;
+        const lb = buf[i + 1];
+        if (b >= 0x81 && b <= 0xFE && lb >= 0x40 && lb <= 0xFE && lb !== 0x7F) hits++;
+        total++;
+        i += 2;
+      }
+    }
+    return total === 0 ? 0 : hits / total;
+  }
+
+  // 如果合法 UTF-8 且含高字节，优先 UTF-8
+  if (isValidUTF8(sample)) {
+    // 检测是否为纯 ASCII
+    let hasHigh = false;
+    for (let i = 0; i < sample.length; i++) if (sample[i] >= 0x80) { hasHigh = true; break; }
+    if (!hasHigh) return 'UTF-8'; // 纯 ASCII 当 UTF-8 处理
+    return 'UTF-8';
+  }
+
+  // 不合法 UTF-8，按 GBK / Big5 猜
+  const gbkScore = countCJK(sample, false);
+  const big5Score = countCJK(sample, true);
+
+  if (big5Score > gbkScore && big5Score > 0.85) return 'Big5';
+  if (gbkScore > 0.85) return 'GBK';
+  // 兜底：GBK 覆盖面更广
+  return 'GBK';
+}
+
+function decodeBytes(bytes, encoding) {
+  // TextDecoder 的 label 兼容处理
+  let label = encoding;
+  if (/^GBK$/i.test(label)) label = 'GBK';           // Chrome/Edge/Firefox 都支持
+  if (/^GB18030$/i.test(label)) label = 'GB18030';
+  if (/^UTF-8$/i.test(label)) label = 'UTF-8';
+  try {
+    return new TextDecoder(label, { fatal: false }).decode(bytes);
+  } catch (e) {
+    // 回退：GBK 兼容用 gb18030
+    try {
+      return new TextDecoder('gb18030', { fatal: false }).decode(bytes);
+    } catch (e2) {
+      return new TextDecoder('UTF-8', { fatal: false }).decode(bytes);
+    }
+  }
+}
+
 function readFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
+    reader.onload = e => {
+      const buffer = e.target.result; // ArrayBuffer
+      const bytes = new Uint8Array(buffer);
+      const encoding = detectEncoding(bytes);
+      const text = decodeBytes(bytes, encoding);
+      // 把检测到的编码挂在返回字符串上（通过闭包/附加属性不方便，用对象返回）
+      resolve({ text, encoding });
+    };
     reader.onerror = e => reject(e.target.error || new Error('读取失败'));
-    reader.readAsText(file, 'UTF-8');
+    reader.readAsArrayBuffer(file);
   });
+}
+
+// 兼容旧调用：返回纯文本
+function readFileText(file) {
+  return readFile(file).then(r => r.text);
 }
 
 const ALL_LANGUAGES = ['日文', '英文', '简体中文', '繁体中文'];
@@ -505,10 +615,8 @@ function renderPage() {
   previewBody.value = previewLines.slice(start, nextStart).join('\n');
   previewBody.scrollTop = 0;
 
-  // 底部翻页条页码
   pageIndicator.textContent = `${currentPage} / ${totalPages}`;
 
-  // 头部页码：全屏时只显示页码，非全屏显示详细信息
   if (isFullscreen()) {
     previewCount.textContent = `${currentPage} / ${totalPages}`;
   } else {
@@ -590,7 +698,6 @@ fullscreenBtn.addEventListener('click', () => {
 function onFullscreenChange() {
   const fs = isFullscreen();
   fullscreenBtn.textContent = fs ? '退出全屏' : '全屏';
-  // 立刻刷新页码显示（全屏/非全屏文案不同）
   if (previewLines.length > 0) renderPage();
   setTimeout(() => {
     if (previewLines.length > 0) {
@@ -819,8 +926,8 @@ async function processJsonFiles(files) {
 
   for (const file of jsonFiles) {
     try {
-      const content = await readFile(file);
-      const root = JSON.parse(content);
+      const { text } = await readFile(file);
+      const root = JSON.parse(text);
       const { results, error } = extractAllLanguages(root);
       if (error) {
         cachedFileResults.push({ fileName: file.name, languages: null, error });
@@ -860,7 +967,7 @@ function handleJsonFiles(files) {
   processJsonFiles(lastFiles);
 }
 
-// ========== 处理 TXT（直接预览） ==========
+// ========== 处理 TXT（自动识别编码后直接预览） ==========
 async function handleTxtFiles(files) {
   const txtFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.txt'));
   if (txtFiles.length === 0) {
@@ -871,10 +978,10 @@ async function handleTxtFiles(files) {
   const file = txtFiles[0];
   try {
     statusDiv.textContent = `正在读取 ${file.name} ...`;
-    const content = await readFile(file);
-    setPreviewContent(`📄 ${file.name}（TXT直读）`, content);
+    const { text, encoding } = await readFile(file);
+    setPreviewContent(`📄 ${file.name}（TXT直读 · ${encoding}）`, text);
     downloadConcatBtn.disabled = true;
-    statusDiv.textContent = `已直接加载：${file.name}（${content.length} 字符）`
+    statusDiv.textContent = `已直接加载：${file.name}（编码 ${encoding}，${text.length} 字符）`
       + (txtFiles.length > 1 ? ` · 共选中 ${txtFiles.length} 个，仅预览第一个` : '');
     previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   } catch (e) {
